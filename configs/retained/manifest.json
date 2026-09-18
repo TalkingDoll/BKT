@@ -1,0 +1,30 @@
+{
+  "description": "Configuration snapshots from local experiment archives; numerical datasets are excluded from Git.",
+  "files": {
+    "configs/retained/alanine/config.json": {
+      "archive": "alanine.zip",
+      "member": "outputs/alanine/config.json",
+      "sha256": "25385bfebcac24c00886ef855b1179123fe0985409a775ef1951a781f3344182"
+    },
+    "configs/retained/admissible_source/config.json": {
+      "archive": "double_well.zip",
+      "member": "outputs/admissible_source/config.json",
+      "sha256": "5b4c4b2bcb08f5fb4d2ebd7911169f92e2f7d727cd296fa564312a0012e93b66"
+    },
+    "configs/retained/admissible_source/source_configuration.json": {
+      "archive": "double_well.zip",
+      "member": "outputs/admissible_source/source_configuration.json",
+      "sha256": "0f4487ee49f33ae9298bc6a8d2ce199cdf06930231cb97abb8dbfdc7705e94d9"
+    },
+    "configs/retained/data_comparison/config.json": {
+      "archive": "double_well.zip",
+      "member": "outputs/data_comparison/config.json",
+      "sha256": "e53829c3cfc5bf6490eea4cff8a754c86fcdd2c66f5405baf129f796b8787a69"
+    },
+    "configs/retained/ou_path_validation/config.json": {
+      "archive": "ou.zip",
+      "member": "outputs/ou_path_validation/config.json",
+      "sha256": "81ff7d4483deead4ec07322f35e67007bfd3dba89c9dc28a307eae3c9ea0da84"
+    }
+  }
+}
