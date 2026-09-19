@@ -33,7 +33,7 @@ def group_for(logical):
     if len(parts) < 2 or parts[0] != "outputs":
         return None
     name = parts[1]
-    if name in {"data", "figures", "all_experiment_results_and_assessment.md"}:
+    if name in {"data", "figures", "all_experiment_results_and_assessment.md", "revision_results.json"}:
         return None
     if name == "alanine":
         return "alanine"
@@ -44,7 +44,7 @@ def group_for(logical):
             return "ou"
         if parts[3] == "reference_statistics":
             return "shared"
-    if name in {"cache", "admissible_source", "data_comparison", "tables", "a10_sweep.json"} or name.startswith("product_"):
+    if name in {"cache", "admissible_source", "data_comparison", "revision", "tables", "a10_sweep.json"} or name.startswith("product_"):
         return "double_well"
     if len(parts) == 2 and name.endswith((".json", ".txt", ".csv", ".log", ".npz")):
         return "shared"

@@ -1,0 +1,64 @@
+{
+  "product_seed_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10
+  ],
+  "excluded_product_seed_index": 6,
+  "source_seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11
+  ],
+  "training_seeds": [
+    1001,
+    1002,
+    1003,
+    1004,
+    1005,
+    1006,
+    1008,
+    1009,
+    1010,
+    1011
+  ],
+  "target_seed": 7,
+  "retained_previous_product_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9
+  ],
+  "alanine_budget_multiplier": 5,
+  "alanine_original_budgets": {
+    "maximum_seconds": 1200.0,
+    "maximum_evaluations": 150000
+  },
+  "alanine_new_budgets": {
+    "maximum_seconds": 6000.0,
+    "maximum_evaluations": 750000
+  },
+  "diagnostic_grid_size": 512,
+  "optional_confined_multiwells_run": false,
+  "threads_per_blas": 1,
+  "scheduling": "Five independent processes: two product runs with eight coordinate workers each, and three alanine transports with one BLAS thread each. Elapsed times are descriptive."
+}

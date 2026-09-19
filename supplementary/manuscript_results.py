@@ -15,106 +15,28 @@ ALANINE_METHOD_LABELS={'BKT':'BKT','LAWGD':'LAWGD','KDE':'KDE'}
 
 REPRODUCTION_NOTES = r"""## Files and reproduction
 
-This is the only Markdown document for experiment results, limitations, fixed protocols, reproduction commands and figure conventions. One notebook, fixed supplementary runners, four checksum-verified archives and PDF figures form the retained package.
+This is the only experiment-results Markdown file. Numerical data are stored in four checksum-verified archives: `outputs/data/ou.zip`, `double_well.zip`, `alanine.zip` and `shared.zip`. The revision records, raw public alanine trajectories needed for role rotations, configuration snapshots and the baseline used for pairing are archive members under `outputs/revision/` in `double_well.zip`. The Git-visible `outputs/revision_results.json` publishes all group-B per-realisation records, summaries and follow-up diagnostics without the large arrays. PDFs remain in `outputs/figures/`.
 
-[OU data](data/ou.zip) | [Double/multiwell data](data/double_well.zip) | [Alanine inputs, parameters and results](data/alanine.zip) | [Shared references and results](data/shared.zip).
-
-[OU](figures/fig_ou.pdf), [10D OU](figures/fig_ou10.pdf), [10D OU marginals](figures/fig_ou10_marginals.pdf), [matched paths](figures/fig_ou_path_comparison.pdf), [double-well ranks](figures/fig_admissible_source_ranks.pdf), [coefficient regimes](figures/fig_admissible_source_coefficients.pdf), [equal-data comparison](figures/fig_data_comparison.pdf), [10D double-well product](figures/fig_hd10_dictionaries.pdf), [50D double-well product](figures/fig_hd50_dictionaries.pdf), [256-mode alanine distribution](figures/fig_alanine.pdf), [three-method alanine convergence](figures/fig_alanine_convergence.pdf).
-
-### Environment and data
-
-Run from the project root with Python 3.11, NumPy 2.4.6, SciPy 1.17.1, Matplotlib 3.11.1 and threadpoolctl 3.6.0. The additional alanine KDE implementation also requires Numba 0.64.0. `uv run --with ...` can supply these versions without changing a global environment.
-
-Four archives under `outputs/data/` contain the numerical inputs, parameters and results:
-
-| Archive | Contents |
-|---|---|
-| `ou.zip` | 1D/10D OU, matched P/I/S paths and numerical diagnostics |
-| `double_well.zip` | Double/multiwell and product systems, manuscript sensitivity studies and equal-data comparison |
-| `alanine.zip` | Dataset, 256-mode Fourier inputs, RBF diagnostics and paired BKT/LAWGD/KDE trajectories with their periodic target-score fit |
-| `shared.zip` | Notebook result index, shared reference data and implementation checks |
-
-`catalog.json` and each archive manifest record member paths, sizes and SHA-256 hashes. The synthetic runners unpack the required data and verify/repack on exit; the alanine verification and plotting routines read the archives directly. Only one independent unpacked data session may be open at a time. The notebook keeps its session open until its final cell or kernel exit; close it manually with `experiment_store.close_notebook_store()` if needed. A setup cell reopens it.
+Use Python 3.11, NumPy 2.4.6, SciPy 1.17.1, Matplotlib 3.11.1, threadpoolctl 3.6.0 and Numba 0.64.0. Each numerical process uses one BLAS thread. The queue may run four independent synthetic repetitions concurrently, or two product repetitions with eight coordinate workers each. Alanine role rotations use four independent transport processes after their three spectra have been fitted sequentially. The equal-data comparison and alanine cost measurements run alone. Concurrent elapsed times are descriptive and are not used to rank samplers. Only one managed archive session may be open at a time.
 
 ```powershell
+uv run --with numpy==2.4.6 --with scipy==1.17.1 --with matplotlib==3.11.1 --with threadpoolctl==3.6.0 --with numba==0.64.0 python -u -B supplementary/revision_queue.py
+uv run --with numpy==2.4.6 --with scipy==1.17.1 --with matplotlib==3.11.1 --with threadpoolctl==3.6.0 --with numba==0.64.0 python -B supplementary/revision_verify.py
+uv run --with numpy==2.4.6 --with scipy==1.17.1 --with matplotlib==3.11.1 --with threadpoolctl==3.6.0 --with numba==0.64.0 python -B supplementary/revision_publish.py
+uv run --with numpy==2.4.6 --with scipy==1.17.1 --with matplotlib==3.11.1 --with threadpoolctl==3.6.0 python -B supplementary/revision_figures.py
 python -B supplementary/experiment_store.py verify
-python -B supplementary/experiment_store.py list alanine
-python -B supplementary/experiment_store.py read outputs/alanine/config.json
-uv run --with numpy==2.4.6 python -B supplementary/manuscript_results.py
 ```
 
-The report command reads saved data directly and runs no experiments. It is the only report generator. `--tables` exports the current manuscript CSV tables, using the admissible-source 2D results and including the coupled-10D limitation. PDFs remain in `outputs/figures/`; plotting reads saved arrays and shares the notebook font sizes and spacing.
+The queue resumes completed prescribed revision rows; it does not replace failed seeds. Each run retains its configuration and available endpoint; the B4 transports also retain per-path masks, including available masks from failed attempts. For a fresh repetition, use a separate checkout with the corresponding revision result rows absent while preserving the baseline snapshots and shared input/reference archives. The publisher validates prescribed seed sets, regenerates the numerical tables, and updates this single report. The figure command reads the published results only. `BKT_experiments.ipynb` calls the same numerical runners, avoiding a second implementation of the revision protocol.
 
-For a numerical consistency check without changing saved results:
+For the fixed follow-up, run `python -u -B supplementary/revision_followup.py run` in the same pinned environment, then run `revision_verify.py`, `revision_publish.py` and `revision_figures.py --products-only`. It adds product index 10 (source 11, training 1011), excludes the dependent index 6, and performs exactly three distinct alanine integrations with both budgets multiplied by five. Saved follow-up integrations are reused. The original spectra and numerical controls are preserved; the optional confined multiwell study is not run. Do not run two managed archive sessions concurrently.
 
-```powershell
-uv run --with numpy==2.4.6 --with scipy==1.17.1 --with threadpoolctl==3.6.0 python -B supplementary/manuscript_results.py --check
-```
+The unchanged matched OU P/I/S experiment retains its 180 runs, ranks 10, 20, 40, two steps and ten source seeds. Its dedicated runner is `ou_path_validation.py`. The original alanine distribution and convergence figures retain the same three Fourier BKT trajectories at s=8; the RBF failure and control remain explicit limitations. B3 cost repetitions and all six trajectory-role pairs are additions, rather than substitutions for the original figure data. Analytical OU distances use the Gaussian reference; alanine SW2 uses its fixed periodic embedding.
 
-This checks all 156 admissible-source and 30 equal-data endpoint clouds and reruns all 180 matched OU transports, residual integrals and safeguard counts. The alanine checks below cover its saved clouds and spectrum/transport reproduction separately.
+`manuscript_results.py` regenerates this report without simulations. `--tables` regenerates CSV tables; `--check` checks canonical endpoint distances and the retained matched OU calculations. `alanine_experiment.py --stage verify` and `alanine_convergence.py --stage verify` check their original saved clouds. The latter checks the frozen protocol and inputs and reports the stored/current source-code fingerprints separately: adding path observations changes the source hash. Fresh run and shard provenance checks remain strict. The revision audit separately records endpoint and scalar solver-reproduction discrepancies without overwriting the archived baseline.
 
-### Synthetic systems
-
-`BKT_experiments.ipynb` contains the numerical definitions, fixed main configurations and manuscript sensitivity studies. Run cells in order to reproduce. Existing compatible caches are reused. The main training sizes are frozen; the appendix rank, sample-size, time and particle-count studies are intentional manuscript results. The obsolete original-source 2D scans and their plotting cells have been removed. Four compact original-source entries in the shared result index supply only the references, horizons and parity values required by the retained supplementary runners; the current 2D results come from `admissible_source`.
-
-| Additional study | Fixed parameters | Runner | Plotting from saved data |
-|---|---|---|---|
-| Matched OU paths | `ou_path_config.json` | `ou_path_validation.py` | `plot_ou_path_validation.py` |
-| Admissible 2D source and I/S coefficients | `admissible_source_config.json` | `run_admissible_source.py` | `plot_admissible_source.py` |
-| Equal-data comparison | `data_comparison_config.json` | `run_data_comparison.py` | `plot_data_comparison.py` |
-
-All paths in the table are under `supplementary/`. The last two runners accept `--resume`; completed matching runs are reused. The equal-data runner also requires matching numerical-code and runtime provenance, saved endpoint checksums and individual timings; variance-0.5 records cannot be resumed under the current protocol. The OU runner refuses to overwrite completed runs. `audit_source_assumptions.py` checks the source/domain assumptions, and `diagnose_data_comparison_endpoints.py` checks the retained comparison endpoints.
-
-```powershell
-uv run --with numpy==2.4.6 --with scipy==1.17.1 python -B supplementary/ou_path_validation.py --check
-uv run --with numpy==2.4.6 --with scipy==1.17.1 --with threadpoolctl==3.6.0 python -B supplementary/run_admissible_source.py --resume
-uv run --with numpy==2.4.6 --with scipy==1.17.1 --with threadpoolctl==3.6.0 python -B supplementary/run_data_comparison.py --resume
-```
-
-For a fresh equal-data reproduction, retain the canonical comparison archive and shared training/reference caches, then append `--output-directory tmp/equal_data_reproduction` to the comparison command, using a previously unused directory and omitting `--resume`. The canonical source-independent input records are required for provenance checks, while every fit and transport is recomputed in the new directory. For other completed synthetic studies, use a separate workspace with that study's saved outputs absent but its shared input caches retained. No parameter search is performed.
-
-### Alanine reproduction
-
-The distribution and convergence figures use the same 256-mode BKT trajectories, the same three source/reference designs and the same endpoint s=8. `alanine_experiment.py` verifies the inputs, reproduces the spectral transport, plots the distribution figure and retains the RBF diagnostics. `alanine_convergence.py` handles the paired BKT/LAWGD/KDE trajectories. The archive retains only the inputs and results needed by these experiments; its RBF file includes all eight diagnostic realisations.
-
-The five members under `outputs/alanine/` are `config.json`, `dataset.npz`, `results.npz`, `lawgd_convergence.npz` and `rbf_diagnostic.npz`. Despite its filename, `results.npz` contains the shared spectral inputs and three source/reference designs; the trajectory arrays and endpoint distribution summary are stored together in `lawgd_convergence.npz`. The 3249 dictionary functions are needed to estimate the retained 256 eigenpairs and are not 3249 transported modes.
-
-```powershell
-uv run --with numpy==2.4.6 --with scipy==1.17.1 --with threadpoolctl==3.6.0 python -B supplementary/alanine_experiment.py --stage verify
-uv run --with numpy==2.4.6 --with scipy==1.17.1 --with threadpoolctl==3.6.0 python -B supplementary/alanine_experiment.py --stage reproduce --seed 1101 --refit
-uv run --with numpy==2.4.6 --with scipy==1.17.1 --with threadpoolctl==3.6.0 python -B supplementary/alanine_experiment.py --case rbf --stage verify
-uv run --with numpy==2.4.6 --with scipy==1.17.1 --with threadpoolctl==3.6.0 python -B supplementary/alanine_experiment.py --case rbf --stage reproduce --seed 301
-uv run --with numpy==2.4.6 --with scipy==1.17.1 --with threadpoolctl==3.6.0 --with matplotlib==3.11.1 python -B supplementary/alanine_experiment.py --stage plot
-```
-
-`verify` recalculates metrics from saved clouds. `reproduce` reruns transport and checks against retained results; omit `--seed` for every seed. Fourier `--refit` rebuilds the spectrum; the small RBF spectrum is always refitted during reproduction. Retained particle arrays are not overwritten.
-
-The alanine distribution PDF uses seed 1101 at s=8 for the angle panels and all three paired seeds for SW2. The coefficients are empirical moments of the initial particles, as in the convergence figure. There is no overall title or seed subtitle. The source-design and evaluation caveats appear in the Alanine section above and notebook notes.
-
-The paired convergence figure uses `supplementary/alanine_convergence.py` and `supplementary/alanine_baselines.py`; its complete protocol is in [Three-method alanine convergence](#three-method-alanine-convergence). All nine prescribed runs reach s=8. The archive member `outputs/alanine/lawgd_convergence.npz` retains their checkpoint clouds, parameters, provenance, fixed target-score fit and numerical checks. BKT/LAWGD arrays reuse the s <= 8 prefixes of the original s=10 trajectories, recorded under `reused_from.original_horizon`; KDE is computed directly through s=8. The runner reproduces simulations or plots retained data:
-
-```powershell
-python -B supplementary/alanine_convergence.py --stage run --seed 1101
-python -B supplementary/alanine_convergence.py --stage run --seed 1102
-python -B supplementary/alanine_convergence.py --stage run --seed 1103
-python -B supplementary/alanine_convergence.py --stage collect
-python -B supplementary/alanine_convergence.py --stage verify
-python -B supplementary/alanine_convergence.py --stage plot
-python -B supplementary/experiment_store.py pack alanine
-python -B supplementary/manuscript_results.py
-```
-
-Run these commands in the pinned environment above, including Numba 0.64.0. `run` writes temporary per-seed shards; `collect` verifies and merges them with the fitted-score metadata and KDE numerical checks into one result file. The retained archive contains the merged file, so `verify` and `plot` work directly from the archive. Temporary shards are unnecessary after the verified merge is archived. BKT/LAWGD spectral settings and the source/reference designs are retained; KDE has its own recorded periodic density estimates and integration controls.
-
-By default, matching archived BKT/LAWGD trajectories are reused and new KDE trajectories are computed. With fresh temporary shards, add `--recompute-spectral` to rerun the spectral transports too. `--method KDE` selects only KDE. Compatible archived KDE checks are retained during collection.
-
-`fig_alanine_convergence.pdf` uses one panel, a logarithmic error axis, the normalized interval [0, 8], and mean +/- sample SD over three paired designs. `ALANINE_DISPLAY_HORIZON` and `ALANINE_METHOD_LABELS` in `manuscript_results.py` define the shared report/figure window and labels. At its current manuscript insertion width of 0.62 textwidth it matches the printed font sizes of `fig_alanine.pdf`; there is no overall title or seed subtitle.
-
-### Figure typography
-
-`PAPER_FONT_SIZES` in `supplementary/figure_style.py` specifies the actual printed sizes for all manuscript figures: overall titles 11 pt, panel titles 9.5 pt, axis labels 9 pt, ticks 8.5 pt and legends 8 pt. Fonts are DejaVu Sans with normal weight. The plotting functions compensate for each canvas width and its current LaTeX insertion width, read from the manuscript files, so the number of panels does not reduce the printed font size. Subplot dimensions may differ.
-
-Regenerate the affected PDFs after changing an insertion width. Manuscript PDFs export the full canvas without tight cropping, which would change the scaling calculation. The admissible-source rank figure uses a 1-by-4 layout; compact panels use shorter axis labels and fewer major tick labels, with every data point retained. Plot margins, title spacing and legend rows accommodate the printed sizes."""
+The shared printed typography is defined in `figure_style.py`: overall title 11 pt, panel title 9.5 pt, axis label 9 pt, ticks 8.5 pt, legend 8 pt, all normal weight. Canvas dimensions and manuscript insertion widths determine export scaling. Where manuscript sources are absent, frozen widths from the retained PDFs are used. The admissible-source rank figure remains 1-by-4. Product histograms use source seed 1, while their marginal-error panels show mean and sample SD over the ten prescribed realisations. Error bars are not confidence intervals.
+"""
 
 
 def read_bytes(name):
@@ -138,10 +60,18 @@ def pm(value):
     if isinstance(value,dict): mean,sd=value['mean'],value.get('std')
     else:
         values=list(value)
+        if not values or any(v is None for v in values):return 'incomplete / failed realisation present'
         mean=statistics.mean(values)
         sd=statistics.stdev(values) if len(values)>1 else None
     if mean is None: return 'failed'
     return f'{mean:.4f}'+(f' +/- {sd:.4f}' if sd is not None else '')
+
+
+def complete_mean_sd(values):
+    values=list(values)
+    if not values or any(v is None or not np.isfinite(v) for v in values):
+        return dict(mean=None,std=None)
+    return dict(mean=statistics.mean(values),std=statistics.stdev(values) if len(values)>1 else None)
 
 
 def table(lines,columns,rows):
@@ -162,15 +92,15 @@ def append_data_comparison(lines):
     table(lines,['beta','Independent-target reference SW2','Crossing threshold'],[
         [r['beta'],pm(r),f"{r['mean']+r['std']:.4f}"] for r in data['references']])
     lines += [
-        'All six entries use five paired realisations and report means +/- sample standard deviations. The source is the same as in the main two-dimensional double-well experiments: a cosine-squared first-coordinate bump on [0.4,1.6] and an independent centred Gaussian second coordinate with variance 0.3. Its density ratio is bounded for both coupling values, since 0.3 < 1/(2+beta).', '',
-        'The 200000 trajectory pairs per seed, target clouds, ten-pair reference statistics and 64 projection directions are unchanged. All 30 transports and the ten spectral and ten drift fits were recomputed. Single-thread costs are measured per run and exclude common input generation and metric callbacks; the shared measured drift-fit cost is charged separately to each baseline. The BKT clouds and observation-time errors are checked against the corresponding main variance-0.3 results.', '',
+        'All six entries use ten paired realisations and report means +/- sample standard deviations. The source is the same as in the main two-dimensional double-well experiments: a cosine-squared first-coordinate bump on [0.4,1.6] and an independent centred Gaussian second coordinate with variance 0.3. Its density ratio is bounded for both coupling values, since 0.3 < 1/(2+beta).', '',
+        'The 200000 trajectory pairs per seed, target clouds, ten-pair reference statistics and 64 projection directions are unchanged. All 60 transports and the twenty spectral and twenty drift fits were recomputed. Single-thread costs are measured per run and exclude common input generation and metric callbacks; the shared measured drift-fit cost is charged separately to each baseline. The BKT clouds and observation-time errors are checked against the corresponding main variance-0.3 results.', '',
         'The common horizons are T=10.7 for beta=0 and T=9.4 for beta=0.5. A reference-threshold crossing means SW2 at a prescribed common observation time is no greater than the independent-target-pair reference mean plus one sample standard deviation. The count is not restricted to the terminal observation and does not use the reference mean alone.', '',
         'Projection of training trajectories, reference samples and transported particles onto the numerical box remains a separate approximation; intermediate RK stages are also projected. The KDE method interacts through its evolving particle density. The fitted-drift Langevin clouds again show widened tails and boundary accumulation; the saved endpoint diagnostics do not isolate the causes. These comparisons concern the stated fitted models and discretisations, not a general ranking of the methods.', '',
         '### Manuscript integration', '',
-        'The table above and [updated comparison figure](figures/fig_data_comparison.pdf) replace the equal-data values in Section 5 and Appendix D.2. The manuscript text and its figure copy are left for author integration. Remove the old variance-0.5 source qualification and retain the description of box projection. The figure displays errors, while costs are given in the text and table; adjust the caption accordingly. The unified variance-0.3 statement applies to the two-dimensional V_beta experiments; the uncoupled ten-dimensional experiment retains nine stationary Gaussian coordinates of variance 0.5.', '',
+        'The table above and [updated comparison figure](figures/fig_data_comparison.pdf) provide the ten-realisation equal-data values for Section 5 and Appendix D.2. The source variance remains 0.3, as in the preceding five-realisation comparison. The figure displays errors, while costs are given in the text and table. The manuscript text and its figure copy are left for author integration. Retain the description of box projection. The variance-0.3 statement applies to the two-dimensional V_beta experiments; the ten-dimensional V_beta source retains harmonic-coordinate variance 0.5. Those coordinates are stationary only in the uncoupled case.', '',
         'Suggested interpretation (all prescribed realisations retained):', '']
     lookup={(r['beta'],r['method']):r for r in rows}
-    complete=all(r['failure_count']==0 and r['n_repeats']==5 for r in rows)
+    complete=all(r['failure_count']==0 and r['n_repeats']==len(config['source_indices']) for r in rows)
     lowest_error=complete and all(lookup[beta,'A']['sw2_mean'] < min(lookup[beta,m]['sw2_mean'] for m in ['B','D']) for beta in config['betas'])
     lowest_cost=complete and all(lookup[beta,'A']['total_seconds_mean'] < min(lookup[beta,m]['total_seconds_mean'] for m in ['B','D']) for beta in config['betas'])
     claims=[]
@@ -326,11 +256,11 @@ def sample_size_rows():
     for beta in study['config']['betas']:
         for n in budgets:
             values=[r['sw2'] for r in study['runs'] if r['beta']==beta and r['n_pairs']==n and 'sample_size' in r['roles']]
-            rows.append(dict(system=f'A2_beta{beta}',n_pairs=n,mean=statistics.mean(values),std=statistics.stdev(values)))
+            rows.append(dict(system=f'A2_beta{beta}',n_pairs=n,**complete_mean_sd(values)))
     for name in ['B_quartic4','B_poly9','A10_beta0.0','A10_beta0.5']:
         for n in budgets:
             values=[r['sw'] for r in primary[name]['sample_size'][str(n)]]
-            rows.append(dict(system=name,n_pairs=n,mean=statistics.mean(values),std=statistics.stdev(values)))
+            rows.append(dict(system=name,n_pairs=n,**complete_mean_sd(values)))
     return dict(budgets=budgets,rows=rows)
 
 
@@ -344,7 +274,7 @@ def write_tables():
         row=dict(system=f'A2_beta{beta}',training_pairs=200000,particles=2000,modes=64)
         for method,key in [('FD','FD'),('RBF','RBF'),('Legendre','Legendre')]:
             values=[r['sw2'] for r in study['runs'] if r['beta']==beta and r['method']==method and 'main' in r['roles']]
-            row[key+'_mean']=statistics.mean(values);row[key+'_SD']=statistics.stdev(values)
+            stats=complete_mean_sd(values);row[key+'_mean']=stats['mean'];row[key+'_SD']=stats['std']
         ref=next(r for r in study['references'] if r['beta']==beta)
         row.update(reference_mean=ref['mean'],reference_SD=ref['std'],reference_repeats=10)
         rows.append(row)
@@ -352,15 +282,21 @@ def write_tables():
         case=primary[name];fd=case.get('fd',case.get('fd_rscan',{}).get('64',{}))
         ref=case['reference']['metrics']['sw']
         rows.append(dict(system=name,training_pairs=case['selected_n'],particles=case['M'],modes=case['r'],
-            FD_mean=fd.get('sw'),FD_SD=None,RBF_mean=case['rbf']['mean'],RBF_SD=case['rbf']['std'],
+            FD_mean=fd.get('sw'),FD_SD=fd.get('std'),RBF_mean=case['rbf']['mean'],RBF_SD=case['rbf']['std'],
             Legendre_mean=case['poly']['mean'],Legendre_SD=case['poly']['std'],
             reference_mean=ref['mean'],reference_SD=ref['std'],reference_repeats=10))
     for d in [10,50]:
         case=read_json(f'product_{d}_results.json');ref=case['reference']['metrics']['sw']
         rows.append(dict(system=f'product_{d}',training_pairs=200000,particles=20000,modes='16 per coordinate',
-            FD_mean=case['methods']['exact']['sw'],FD_SD=None,RBF_mean=case['methods']['estimated']['sw'],RBF_SD=None,
-            Legendre_mean=case['methods']['legendre']['sw'],Legendre_SD=None,
+            FD_mean=case['methods']['exact']['sw'],FD_SD=case['methods']['exact'].get('metrics',{}).get('sw',{}).get('std'),
+            RBF_mean=case['methods']['estimated']['sw'],RBF_SD=case['methods']['estimated'].get('metrics',{}).get('sw',{}).get('std'),
+            Legendre_mean=case['methods']['legendre']['sw'],Legendre_SD=case['methods']['legendre'].get('metrics',{}).get('sw',{}).get('std'),
             reference_mean=ref['mean'],reference_SD=ref['std'],reference_repeats=10))
+    for row in rows:
+        row['Legendre_median']=primary.get(row['system'],{}).get('poly',{}).get('median')
+        row['Legendre_above_ten_reference_mean']=primary.get(row['system'],{}).get('poly',{}).get('above_ten_reference_mean')
+        if row['system']=='B_poly9' and row['Legendre_median'] is not None:
+            row['Legendre_mean']=row['Legendre_SD']=None
     with managed_outputs('double_well'):
         folder=ROOT/'outputs/tables';folder.mkdir(exist_ok=True)
         for appendix in [False,True]:
@@ -387,21 +323,26 @@ def verify_saved_results():
     from run_admissible_source import specifications, run_id
     checked={};largest=0.
     with threadpool_limits(limits=1):
-        for study,count in [('admissible_source',156),('data_comparison',30)]:
+        for study in ('admissible_source','data_comparison'):
             rows=read_json(study+'/runs.json')
-            assert len(rows)==count and all(r['status']=='ok' for r in rows)
+            config=read_json(study+'/config.json')
+            count=config['expected_unique_runs'] if study=='admissible_source' else len(config['betas'])*len(config['source_indices'])*len(config['methods'])
+            assert len(rows)==count
             if study=='admissible_source':
                 config=read_json(study+'/config.json')
                 expected={run_id(r) for beta in config['betas'] for r in specifications(config,beta)}
                 assert expected=={r['run_id'] for r in rows}
             else:
                 assert {(r['beta'],r['seed'],r['method']) for r in rows}=={
-                    (b,s,m) for b in [0.,.5] for s in range(5) for m in ['A','B','D']}
+                    (b,s,m) for b in config['betas'] for s in config['source_indices'] for m in config['methods']}
             for beta in sorted({r['beta'] for r in rows}):
                 with np.load(io.BytesIO(read_bytes(f'{study}/evaluation_beta{beta:g}.npz'))) as z:
                     target,directions=z['target'],z['directions']
                 ordered=np.sort(target@directions.T,axis=0)
                 for row in [r for r in rows if r['beta']==beta]:
+                    if row['status']!='ok':
+                        assert row.get('sw2') is None
+                        continue
                     key=row['run_id'] if study=='admissible_source' else f"beta{beta:g}_seed{row['seed']}_{row['method']}"
                     with np.load(io.BytesIO(read_bytes(f'{study}/endpoint_{key}.npz'))) as z:x=z['final']
                     assert np.isfinite(x).all() and x.shape==target.shape
@@ -449,6 +390,8 @@ def verify_saved_results():
 def write_report():
     primary=read_json('results.json')
     a=read_json('admissible_source/summary.json')
+    if primary.get('_config',{}).get('version')!='revision-B1-B4-v1' or any(n!=10 for n in a['config']['seed_counts'].values()):
+        raise ValueError('Publish the completed B1--B4 revision with revision_publish.py before regenerating the ten-realisation report.')
     lines=['# Manuscript experiment results','',
         'Retained results include favorable and unfavorable manuscript cases. Every repeated summary includes all prescribed seeds and uses sample standard deviations. Alanine retains one 256-mode Fourier experiment with distribution and convergence figures, together with the RBF control and collapse diagnostics.','',
         'Synthetic multivariate distances use 64 fixed projections (seed 0); references use ten target-cloud repetitions. The analytical OU studies compare directly with the Gaussian target. References describe empirical sampling variability and are not universal lower bounds. Alanine has a separate periodic metric.','',
@@ -462,12 +405,12 @@ def write_report():
     table(lines,['Experiment','Setup'],[
         ['1D OU','N(1.5,0.5^2) to N(0,1); Hermite spectrum; RK4 h=0.05; initial-particle coefficients (S).'],
         ['Matched OU paths','M=2000; r=10,20,40; T=6; h=0.05,0.025; seeds 1000-1009; P/I/S; all 180 runs.'],
-        ['10D OU','Coupling 0 and 0.15; M=5000; 30 modes/coordinate; T=6; h=0.05; seeds 700-702.'],
+        ['10D OU','Coupling 0 and 0.15; M=5000; 30 modes/coordinate; T=6; h=0.05; seeds 700-709.'],
         ['2D double wells','beta=0,0.25,0.5,1; M=2000; n=200000; r=64; RBF J=145; FD-201; T=8/lambda1; h=0.05.'],
-        ['4/9 wells','M=2000; n=200000; r=64; RBF/Legendre/FD-201; h=0.02; five/three seeds.'],
-        ['10D double wells','beta=0,0.5; M=1000; n=100000; r=16; RBF J=657; h=0.05; two seeds.'],
-        ['10D/50D double-well products','M=20000; n=200000; r=16 per coordinate; T=10.6854; h=0.02; one fixed cloud.'],
-        ['Equal-data comparison','beta=0,0.5; n=200000 shared pairs; M=2000; five paired seeds; common horizon.']])
+        ['4/9 wells','M=2000; n=200000; r=64; RBF/Legendre/FD-201; h=0.02; ten seeds.'],
+        ['10D double wells','beta=0,0.5; M=1000; n=100000; r=16; RBF J=657; h=0.05; ten seeds; independent mode selection.'],
+        ['10D/50D double-well products','M=20000; n=200000; r=16 per coordinate; requested T=10.6854, effective time 10.68 (534 steps); h=0.02; ten paired clouds.'],
+        ['Equal-data comparison','beta=0,0.5; n=200000 shared pairs; M=2000; ten paired seeds; common horizon.']])
     lines+=['The synthetic ratio floor is 0.001 and speed cap is 20. The boxed double-well solver projects intermediate RK stages. The main 2D double-well experiments and equal-data comparison share the admissible source: a cosine-squared x1 bump on [0.4,1.6] and x2 variance 0.3. The uncoupled 10D experiment retains nine stationary harmonic coordinates of variance 0.5. Reproduction uses frozen main training sizes; the appendix sample-size and rank studies remain explicit sensitivity experiments.','',
         '## Ornstein-Uhlenbeck results']
     ou=read_json('ou_results.json')
@@ -492,26 +435,32 @@ def write_report():
         rows.append([f'2D double well{" product" if beta==0 else ""}, beta={beta:g}',*[pm(values[m]) for m in ['FD','RBF','Legendre']],pm(next(r for r in a['references'] if r['beta']==beta))])
     for name,label in [('B_quartic4','2D four-well product'),('B_poly9','2D nine wells'),('A10_beta0.0','10D double well product, beta=0'),('A10_beta0.5','10D double well, beta=0.5')]:
         r=primary[name];fd=r.get('fd',r.get('fd_rscan',{}).get('64'))
-        rows.append([label,f"{fd['sw']:.4f}" if fd else '--',pm(r['rbf']),pm(r['poly']),pm(r['reference']['metrics']['sw'])])
+        median=f"{r['poly']['median']:.4f}" if r['poly'].get('median') is not None else 'unavailable'
+        legendre=(f"median {median}; {r['poly']['above_ten_reference_mean']}/10 above 10 x reference mean"
+                  if name=='B_poly9' and 'above_ten_reference_mean' in r['poly'] else pm(r['poly']))
+        rows.append([label,pm(dict(mean=fd['sw'],std=fd.get('std'))) if fd else '--',pm(r['rbf']),legendre,pm(r['reference']['metrics']['sw'])])
     for d in [10,50]:
         p=read_json(f'product_{d}_results.json')
-        rows.append([f'{d}D double-well product',*[f"{p['methods'][m]['sw']:.4f}" for m in ['exact','estimated','legendre']],pm(p['reference']['metrics']['sw'])])
+        rows.append([f'{d}D double-well product',*[pm(p['methods'][m].get('metrics',{}).get('sw',dict(mean=p['methods'][m]['sw']))) for m in ['exact','estimated','legendre']],pm(p['reference']['metrics']['sw'])])
     table(lines,['System','FD','Koopman (RBF)','Koopman (Legendre)','Reference SW2'],rows)
-    lines+=['Double wells and four wells reach the reference scale; nine wells and coupled 10D remain above it. Nine-well Legendre seed errors are '+', '.join(f'{x:.3f}' for x in primary['B_poly9']['poly']['sw'])+'. All are retained. The product results rely on separability: the potential is a sum of coordinate potentials and the invariant density is a product. The uncoupled 10D double well has one double-well factor and nine stationary N(0, 0.5) factors; the 10D/50D double-well products have a double-well factor in every coordinate.']
+    lines+=['The table summarizes ten prescribed realisations per repeated cell. Reference distances measure finite-sample variability. Nine-well Legendre seed errors are '+', '.join(f'{x:.3f}' if x is not None else 'failed' for x in primary['B_poly9']['poly']['sw'])+'. All are retained. The product results rely on separability: the potential is a sum of coordinate potentials and the invariant density is a product. The uncoupled 10D double well has one double-well factor and nine stationary N(0, 0.5) factors; the 10D/50D double-well products have a double-well factor in every coordinate.',
+            'The 10D/50D product summaries use indices s=0--5,7--10: source seed 1+s skips the fixed target seed 7. The dependent source/target pair at index 6 is excluded, and index 10 uses source seed 11 and training seed 1011. Nine original realisations and the fixed target, reference statistics and projection directions are unchanged. The follow-up section compares the previous and corrected ten-realisation summaries.']
     table(lines,['Product','RBF worst marginal W2','Reference worst marginal W2','RBF energy','Reference energy','RBF negative-count TV','Reference negative-count TV'],[
-        [d,f"{p['methods']['estimated']['max_marginal']:.4f}",pm(p['reference']['metrics']['max_marginal']),f"{p['methods']['estimated']['energy']:.4f}",pm(p['reference']['metrics']['energy']),f"{p['methods']['estimated']['negative_count_tv']:.4f}",pm(p['reference']['metrics']['negative_count_tv'])]
+        [d,pm(p['methods']['estimated'].get('metrics',{}).get('max_marginal',dict(mean=p['methods']['estimated']['max_marginal']))),pm(p['reference']['metrics']['max_marginal']),pm(p['methods']['estimated'].get('metrics',{}).get('energy',dict(mean=p['methods']['estimated']['energy']))),pm(p['reference']['metrics']['energy']),pm(p['methods']['estimated'].get('metrics',{}).get('negative_count_tv',dict(mean=p['methods']['estimated']['negative_count_tv']))),pm(p['reference']['metrics']['negative_count_tv'])]
         for d in [10,50] for p in [read_json(f'product_{d}_results.json')]])
     lines+=['### Appendix sensitivity results','',
-        'Rank scans use the first source seed; they retain nonmonotone and unstable results. The complete 2D ranks, paired step checks and safeguard counts remain in the 156-run admissible-source suite.']
+        'Rank scans use the first source seed; they retain nonmonotone and unstable results. The complete 2D ranks, paired step checks and safeguard counts remain in the 320-run admissible-source suite.']
     rows=[]
     for name,label in [('B_quartic4','4 wells'),('B_poly9','9 wells')]:
         r=primary[name]
         for method,scan in [('FD',r['fd_rscan']),('Koopman (RBF)',r['rbf']['rscan']),('Koopman (Legendre)',r['poly']['rscan'])]:
-            rows.append([label,method,', '.join(f"r={rank}: {v['sw']:.3f}" for rank,v in sorted(scan.items(),key=lambda x:int(x[0])))])
+            rows.append([label,method,', '.join(f"r={rank}: {v['sw']:.3f}" if v['sw'] is not None else f"r={rank}: failed" for rank,v in sorted(scan.items(),key=lambda x:int(x[0])))])
     table(lines,['System','Spectrum','SW2 by rank'],rows)
     table(lines,['Coupled 10D dictionary','Size parameter','Requested rank','SW2'],[
-        [{'rbf':'Koopman (RBF)','poly':'Koopman (Legendre)'}[r['dictionary']],r['size'],r['r_requested'],f"{r['sw']:.4f}"] for r in read_json('a10_sweep.json')['rows']])
-    lines+=['The coupled 10D dictionary comparison uses n=100000 and the first seed. Its horizon changes with the fitted eigenvalue; no configuration reaches the reference.']
+        [{'rbf':'Koopman (RBF)','poly':'Koopman (Legendre)'}[r['dictionary']],r['size'],r['r_requested'],f"{r['sw']:.4f}" if r['sw'] is not None else 'failed'] for r in read_json('a10_sweep.json')['rows']])
+    scan=read_json('a10_sweep.json')['rows'];reference=primary['A10_beta0.5']['reference']['metrics']['sw']
+    hits=sum(r.get('sw') is not None and r['sw']<=reference['mean']+reference['std'] for r in scan)
+    lines+=[f'The coupled 10D dictionary comparison uses n=100000 and the first seed. Its horizon changes with the fitted eigenvalue; {hits}/{len(scan)} configurations have terminal SW2 at or below the reference mean plus one sample standard deviation.']
     b=sample_size_rows()
     system_labels={f'A2_beta{beta}':f'2D double well{" product" if beta==0 else ""}, beta={beta:g}' for beta in a['config']['betas']}
     system_labels.update(B_quartic4='2D four-well product',B_poly9='2D nine wells',
@@ -539,6 +488,12 @@ def write_report():
     lines += [f"BKT SW2 is {ratio:.3f} times the reference mean ({wins}/{len(runs)} smaller paired values). Local-width ratio: {pm(r['final']['local_width_ratio'] for r in runs)}. Rare-region mass: {generated[2]:.4f} versus {target[2]:.4f}. The global distances are of the same order as the sampling reference; rare-region coverage and within-basin spread remain imperfect.", '',
         'SW2 uses 32 projections (seed 2026) in [cos(phi), cos(psi), sin(phi), sin(psi)], an extrinsic periodic embedding. Mass TV measures four training-defined regions, not full densities. Three clouds per seed are disjoint subsets of one evaluation trajectory. Variability is conditional on the spectrum and reflects scrambling/reference draws, not independent MD datasets.', '',
         'The operator is a unit-mobility reversible surrogate of the smoothed angle marginal, not the physical MD generator. Outputs are angles, not full molecular configurations.']
+    revision=read_json('revision/summary.json')
+    rotations=[r for r in revision['alanine_rows'] if r.get('task')=='B3b_rotation']
+    finished=sum(r['status']=='ok' and r['checkpoints'][-1]['s']==8 for r in rotations)
+    lines += ['',f'The additional B3 trajectory-role experiment completed {finished}/{len(rotations)} prescribed transports to s=8 under the unchanged numerical controls. Its six ordered pairs vary the fitted spectrum, source construction, basin partition and evaluation trajectory. Results and all incomplete integrations are reported in the revision section; the original figure alone does not establish robustness to changing the estimation trajectory.','']
+    costs={r['method']:r for r in revision['alanine_cost_summaries']}
+    lines += [f"Fresh single-thread transport wall times to s=8 are {pm(costs['BKT']['wall_seconds'])} s for BKT, {pm(costs['LAWGD']['wall_seconds'])} s for LAWGD and {pm(costs['KDE']['wall_seconds'])} s for KDE; estimation and initial moments are tabulated separately in B3. BKT and LAWGD have comparable full-horizon costs in this test. Earlier settling in normalized flow time does not by itself establish a lower total computational cost.",'']
     reproduction=result.get('reproduction_check',{})
     if reproduction:
         for check in reproduction.get('comparisons',[]):
@@ -556,16 +511,18 @@ def write_report():
     lines+=['The long-time RBF cloud collapses within basins despite moderate sliced error. The width diagnostic preserves this negative result. Reconstructed arrays match the original reported metrics within 1e-4, using tight ODE tolerances.']
     append_alanine_convergence(lines)
     lines+=['', '## Numerical consistency and interpretation', '',
-        'The current manuscript retains eleven figure PDFs, one experiment report, fixed configurations and four checksum-verified archives. Koopman (RBF) and Koopman (Legendre) describe the dictionary used for the reversible gEDMD generator estimate; every such curve uses the same BKT transport formula.', '',
+        'The retained package contains eleven figure PDFs, one experiment report, fixed configurations and four checksum-verified archives. Koopman (RBF) and Koopman (Legendre) describe the dictionary used for the reversible gEDMD generator estimate; every such curve uses the same BKT transport formula.', '',
         'Data attribution: the [mdshare alanine page](https://markovmodel.github.io/mdshare/ALA2/) documents the simulations and publication credits, including Nueske et al. (2017), cited in the manuscript. The Computational Molecular Biology Group, Freie Universitaet Berlin, supplies the data under the [mdshare CC BY 4.0 terms](https://markovmodel.github.io/mdshare/). Retained arrays use float64 conversion and the fixed subsampling described above.', '',
-        'The equal-data comparison now contains 30 freshly computed variance-0.3 transports with individual fit and sampling times. Its source-independent inputs are checked against the previous protocol, and its ten BKT results are checked against the main variance-0.3 experiment. Other retained numerical experiments are unchanged. The earlier reproduction audit checked all 156 admissible-source endpoints and 112 notebook transport caches, reran all 180 matched OU transports, and checked 155 synthetic and 44 alanine table entries. The paired alanine archive contains 1593 BKT/LAWGD/KDE checkpoints; their SW2 and basin TV are checked against the saved clouds by the verification command.', '',
+        'The equal-data comparison contains 60 variance-0.3 transports with individual fit and sampling times. The revision section records checks against the original realisations and corresponding main results, including any discrepancy above the requested tolerance. The original alanine distribution/convergence arrays are retained for their figures; additional cost and trajectory-role checks are recorded separately below.', '',
         'The alanine distribution summary uses the three BKT endpoints at s=8 from the convergence archive, with their original sources and evaluation clouds. The saved input file contains only the 256 retained eigenpairs and the three source/reference designs needed by this experiment. No independent set of Fourier transport results is used for the distribution figure. The RBF controls remain as explicit limitations.', '',
         'Reference distances describe sampling variability and are not lower bounds for transport. In the equal-data comparison, a reference-threshold crossing uses the reference mean plus one sample standard deviation at a prescribed observation time. The two-dimensional admissible source has harmonic variance 0.3; the uncoupled ten-dimensional source has nine stationary harmonic coordinates of variance 0.5.', '',
         'FD-201 uses a 201-by-201 grid for two-dimensional systems; the high-dimensional FD comparisons use separable one-dimensional factors. Separable high-dimensional experiments do not establish performance on general coupled targets. The nine-well and coupled-10D limitations remain. The angular-marginal example does not test physical molecular kinetics.', '',
         'The same-sample comparison requires the stated common-region assumptions. Its coefficient factor is Delta_M = M^(-1/2) sum_k sqrt(Var(phi_k)); bounded individual variances give O(r/sqrt(M)), with possible additional rank dependence in the stability factor. Initial empirical coefficients do not imply exact spectral moments of the transported particles. These numerical checks do not constitute an independent proof review.']
+    from revision_report import append_revision
+    append_revision(lines)
     lines += ['', REPRODUCTION_NOTES]
     content=re.sub(r'(?m)^(#{1,6} [^\n]+)\n(?=\S)',r'\1\n\n','\n'.join(lines)+'\n')
-    RESULTS_PATH.write_text(content,encoding='utf-8')
+    RESULTS_PATH.write_text(content.rstrip()+'\n',encoding='utf-8',newline='\n')
     print(f'Updated {RESULTS_PATH} ({len(lines)} lines).')
     return RESULTS_PATH
 

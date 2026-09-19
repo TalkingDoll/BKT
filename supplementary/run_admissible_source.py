@@ -193,7 +193,7 @@ def instrumented_transport(pot, lam, basis, source, coefficient_source, rank, ho
     events["requested_steps"] = nsteps; events["completed_steps"] = completed
     return dict(final=X, coefficients=coefficients, sw2=None if failure else records[-1]["sw2"],
                 status="failed" if failure else "ok", failure=failure,
-                events=events, checkpoint_records=records,
+                events=events, path_masks=dict(masks,affected=np.logical_or.reduce(list(masks.values()))), checkpoint_records=records,
                 sampling_seconds=time.perf_counter()-started-excluded, metric_seconds=excluded)
 
 
@@ -376,9 +376,11 @@ def main():
     parser.add_argument('--probe',action='store_true')
     parser.add_argument('--resume',action='store_true')
     args=parser.parse_args();config=json.loads(args.config.read_text())
+    if config.get('version',1)>=2:
+        raise ValueError('The ten-realisation revision uses revision_synthetic.py a2, followed by revision_verify.py and revision_publish.py. This legacy CLI preserves the original-source probe and must not overwrite the revision records.')
     out=ROOT/config['output_directory'];out.mkdir(parents=True,exist_ok=True)
     count=sum(len(specifications(config,b)) for b in config['betas'])
-    if count!=config['expected_unique_runs']:raise AssertionError(f'Expected156 physical runs, planned{count}')
+    if count!=config['expected_unique_runs']:raise AssertionError(f"Expected {config['expected_unique_runs']} physical runs, planned {count}")
     saved_config=out/'config.json'
     if saved_config.exists() and json.loads(saved_config.read_text())!=config:raise ValueError('Saved configuration differs; use a separate output directory')
     if any(out.glob('runs_beta*.json')) and not args.resume and not args.probe:raise FileExistsError('Existing experiment shards; use --resume')

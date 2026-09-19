@@ -196,6 +196,10 @@ def run(config_path, resume=False, probe=False, output_directory=None):
     for name, value in previous_config.items():
         if name not in source_or_provenance:
             assert config[name] == value, f"A non-source protocol parameter changed: {name}"
+    if config.get("version") == 3:
+        raise ValueError("The ten-realisation revision uses supplementary/revision_comparison.py. "
+                         "Run revision_queue.py for the complete B1--B4 protocol, then revision_publish.py. "
+                         "This legacy entry point does not mix its resume records with revision records.")
     assert config["version"] == 2 and config["source_x2_variance"] == .3
     assert config["bkt_step"] == config["kde_step"] == .05 and config["retained_nonconstant_modes"] == 64
     assert config["bkt_density_floor"] == .001 and config["bkt_speed_cap"] == 20

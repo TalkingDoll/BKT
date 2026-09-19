@@ -121,17 +121,31 @@ def checks(data,dic):
     return errors
 
 
-def transport(data,dic,rank,method,seed):
+def transport(data,dic,rank,method,seed,budgets=None,diagnostics=None):
+    from revision_common import PathMasks
     i=data['record']['seeds'].index(seed);source,target=data['source'][i],data['target'][i]
     b=np.ascontiguousarray(data['basis'][:,:rank]);lam=data['lam'][:rank]
     l1=float(data['lam'][0]);cap=SPEC['raw_bkt_speed_cap']/l1
+    coefficient_wall=time.perf_counter();coefficient_cpu=time.process_time()
     initial=mean_features(dic,geometry(dic,source))@b
+    coefficient_cpu=time.process_time()-coefficient_cpu;coefficient_wall=time.perf_counter()-coefficient_wall
+    watch=PathMasks(len(source),scope='All adaptive RHS evaluations, including rejected and dense-output stages; torus wrapping is not box projection')
     events=dict(nfev=0,point_evaluations=0,nonpositive_density=0,density_floor=0,speed_cap=0,
                 minimum_density_ratio=None,maximum_uncapped_normalized_speed=0.)
+    limits={key:SPEC[key] for key in ('maximum_seconds','maximum_evaluations')}
+    if budgets is not None:
+        if set(budgets)!=set(limits) or any(v<=0 for v in budgets.values()):raise ValueError('Invalid resource budgets')
+        limits.update(budgets)
+    termination_reason=None
     rows=[];clouds=[];excluded_cpu=excluded_wall=0.
     wall0=time.perf_counter();cpu0=time.process_time();last_progress=wall0
     def rhs(s,flat):
-        if events['nfev']>=SPEC['maximum_evaluations'] or time.perf_counter()-wall0-excluded_wall>SPEC['maximum_seconds']:
+        nonlocal termination_reason
+        if events['nfev']>=limits['maximum_evaluations']:
+            termination_reason='evaluation_budget'
+            raise RuntimeError('Resource limit reached; no completed endpoint is claimed.')
+        if time.perf_counter()-wall0-excluded_wall>limits['maximum_seconds']:
+            termination_reason='time_budget'
             raise RuntimeError('Resource limit reached; no completed endpoint is claimed.')
         x=flat.reshape(source.shape);geo=geometry(dic,x)
         if method=='BKT':
@@ -141,6 +155,8 @@ def transport(data,dic,rank,method,seed):
             velocity=-grad/(np.maximum(rho,SPEC['bkt_ratio_floor'])*l1)[:,None]
             events['nonpositive_density']+=int((rho<=0).sum())
             events['density_floor']+=int((rho<SPEC['bkt_ratio_floor']).sum())
+            watch.masks['floor'] |= rho<SPEC['bkt_ratio_floor']
+            watch.masks['nonpositive'] |= rho<=0
             old=events['minimum_density_ratio'];value=float(rho.min())
             events['minimum_density_ratio']=value if old is None else min(old,value)
         else:
@@ -150,6 +166,7 @@ def transport(data,dic,rank,method,seed):
         if not np.isfinite(velocity).all():raise FloatingPointError('Nonfinite field.')
         events['maximum_uncapped_normalized_speed']=max(events['maximum_uncapped_normalized_speed'],float(norm.max()))
         events['speed_cap']+=int((norm>cap).sum())
+        watch.masks['cap'] |= norm>cap
         velocity*=np.minimum(1,cap/np.maximum(norm,1e-12))[:,None]
         events['nfev']+=1;events['point_evaluations']+=len(x)
         return velocity.ravel()
@@ -179,8 +196,17 @@ def transport(data,dic,rank,method,seed):
                 last_progress=time.perf_counter()
     except (RuntimeError,FloatingPointError) as exc:
         failure=str(exc)
+        if termination_reason is None:
+            termination_reason=('step_size_underflow' if failure==DOP853.TOO_SMALL_STEP else
+                                'nonfinite_field' if isinstance(exc,FloatingPointError) else 'solver_failure')
+    if failure is None:termination_reason='completed' if cursor==len(TIMES) else 'incomplete'
+    if diagnostics is not None:
+        diagnostics['last_accepted_state']=alanine.wrap(solver.y.reshape(source.shape)) if solver is not None else source.copy()
+    events.update(watch.result())
     row=dict(method=method,rank=rank,seed=seed,status='ok' if failure is None and cursor==len(TIMES) else 'incomplete',
-             failure=failure,completed_s=float(solver.t) if solver else 0.,checkpoints=rows,events=events,
+             failure=failure,termination_reason=termination_reason,resource_budgets=limits,
+             completed_s=float(solver.t) if solver else 0.,checkpoints=rows,events=events,
+             coefficient_wall_seconds=coefficient_wall,coefficient_cpu_seconds=coefficient_cpu,threads=1,
              cpu_seconds=time.process_time()-cpu0-excluded_cpu,wall_seconds=time.perf_counter()-wall0-excluded_wall,
              source_sha256=sha(source),target_sha256=sha(target),initial_empirical_moments_sha256=sha(initial))
     return row,np.asarray(clouds)
@@ -195,6 +221,11 @@ def numerical_fingerprint():
 
 
 def save(path,record,arrays):
+    for row in record.get('runs',[]):
+        masks=row.get('events',{}).pop('path_masks',None)
+        if masks is not None:
+            row['events']['path_mask_arrays']={name:row['id']+'_mask_'+name for name in masks}
+            arrays.update({row['id']+'_mask_'+name:value for name,value in masks.items()})
     path.parent.mkdir(parents=True,exist_ok=True)
     temporary=path.with_suffix('.pending.npz')
     np.savez(temporary,record=json.dumps(record,allow_nan=False),**arrays)
@@ -271,6 +302,8 @@ def import_spectral_runs(seed,data):
             row['cpu_seconds']=row['checkpoints'][-1]['cpu_seconds']
             row['wall_seconds']=row['checkpoints'][-1]['wall_seconds']
             selected.append(row);arrays[key+'_clouds']=z[key+'_clouds'][:len(TIMES)]
+            for mask_key in row.get('events',{}).get('path_mask_arrays',{}).values():
+                arrays[mask_key]=z[mask_key]
     return selected,arrays
 
 
@@ -351,11 +384,17 @@ def verify(record=None,arrays=None):
     data,dic=inputs();expected={(r,m,s) for r,m in CASES for s in SEEDS}
     actual={(r['rank'],r['method'],r['seed']) for r in record['runs']}
     if len(record['runs'])!=len(expected) or actual!=expected:raise ValueError('Incomplete or duplicate run grid.')
-    assert record['provenance']==provenance(data,dic)
+    current_provenance=provenance(data,dic)
+    # Verify archived data against the frozen protocol and inputs. Adding B4
+    # observations changes the source hash without changing those inputs.
+    # Fresh runs and shard collection still require exact provenance equality.
+    for key,value in current_provenance.items():
+        if key!='numerical_code_sha256':assert record['provenance'][key]==value,key
+    code_matches=record['provenance']['numerical_code_sha256']==current_provenance['numerical_code_sha256']
     with np.load(io.BytesIO(read_bytes('alanine/dataset.npz'))) as z:
         assert record['baseline_fit']['train_sha256']==sha(z['train_all'])
     assert record['baseline_fit']['coefficient_sha256']==sha(arrays['target_log_density_coefficients'])
-    checked=0;maximum_error=0.;complete_runs=0;incomplete_runs=[]
+    checked=0;maximum_error=0.;complete_runs=0;incomplete_runs=[];mask_keys=set()
     for row in record['runs']:
         count=len(row['checkpoints'])
         assert 1<=count<=len(TIMES) and row['completed_s']==TIMES[count-1]
@@ -383,6 +422,20 @@ def verify(record=None,arrays=None):
             if 'source_archive_member_sha256' in diagnostic:
                 assert diagnostic['source_archive_member_sha256']==data['archive_member_sha256']
         assert row['source_sha256']==sha(data['source'][i]) and row['target_sha256']==sha(data['target'][i])
+        events=row.get('events',{});saved_masks=events.get('path_mask_arrays')
+        if saved_masks is not None:
+            names={'floor','nonpositive','cap','projection','affected'}
+            assert set(saved_masks)==names,row['id']
+            masks={}
+            for name,key in saved_masks.items():
+                assert key==row['id']+'_mask_'+name and key in arrays
+                mask=arrays[key]
+                assert mask.dtype==bool and mask.shape==(len(cloud[0]),)
+                assert int(mask.sum())==events['unique_'+name+'_particles']
+                assert abs(float(mask.mean())-events[name+'_particle_fraction'])<=1e-15
+                masks[name]=mask;mask_keys.add(key)
+            assert np.array_equal(masks['affected'],np.logical_or.reduce([masks[k] for k in names-{'affected'}]))
+            assert np.all(~masks['nonpositive'] | masks['floor'])
         np.testing.assert_array_equal(cloud[0],data['source'][i])
         np.testing.assert_allclose([c['s'] for c in row['checkpoints']],TIMES[:count],atol=0,rtol=0)
         for c,x in zip(row['checkpoints'],cloud):
@@ -391,12 +444,17 @@ def verify(record=None,arrays=None):
             np.testing.assert_array_equal(c['masses'],fresh['masses'])
             error=max(abs(c[k]-fresh[k]) for k in ('sw2','mass_tv'))
             maximum_error=max(maximum_error,error);checked+=1
-    expected_arrays={r['id']+'_clouds' for r in record['runs']}|{'target_log_density_coefficients','target_density'}
+    expected_arrays={r['id']+'_clouds' for r in record['runs']}|{'target_log_density_coefficients','target_density'}|mask_keys
     assert set(arrays)==expected_arrays,'Unexpected or obsolete result arrays'
     if maximum_error>1e-12:raise ValueError('Saved metric mismatch.')
     assert record['distribution']==alanine.distribution_summary(data,record,arrays)
     return dict(checkpoints=checked,maximum_metric_error=maximum_error,runs=len(record['runs']),
-                complete_runs=complete_runs,incomplete_runs=incomplete_runs)
+                complete_runs=complete_runs,incomplete_runs=incomplete_runs,
+                checked_path_masks=len(mask_keys),
+                numerical_code_matches=code_matches,
+                stored_numerical_code_sha256=record['provenance']['numerical_code_sha256'],
+                current_numerical_code_sha256=current_provenance['numerical_code_sha256'],
+                scope='Saved protocol, inputs, clouds and metrics. Source-code fingerprints are reported separately; B4 solver reproduction is checked in the revision audit.')
 
 
 def collect():
@@ -404,10 +462,12 @@ def collect():
     import scipy
     import numba
     record=None;arrays={};fit=baseline_fit()
+    data,dic=inputs();expected_provenance=provenance(data,dic)
     for seed in SEEDS:
         path=ROOT/f'tmp/alanine_comparison/seed{seed}.npz'
         with np.load(path) as z:
             part=json.loads(str(z['record']))
+            if part['provenance']!=expected_provenance:raise ValueError('Shard provenance differs from the current reproduction code or protocol.')
             if record is None:
                 record=dict(provenance=part['provenance'],checks=part['checks'],baseline_fit=fit['metadata'],runs=[])
             elif part['provenance']!=record['provenance']:raise ValueError('Shard protocol mismatch.')

@@ -1,7 +1,17 @@
 {
-  "version": 1,
-  "betas": [0.0, 0.25, 0.5, 1.0],
-  "seed_counts": {"0.0": 5, "0.25": 3, "0.5": 5, "1.0": 3},
+  "version": 2,
+  "betas": [
+    0.0,
+    0.25,
+    0.5,
+    1.0
+  ],
+  "seed_counts": {
+    "0.0": 10,
+    "0.25": 10,
+    "0.5": 10,
+    "1.0": 10
+  },
   "source_mean_x1": 1.0,
   "source_bump_half_width": 0.6,
   "source_bump_cdf_grid_points": 4001,
@@ -13,14 +23,24 @@
   "target_seed": 7,
   "particles": 2000,
   "main_training_pairs": 200000,
-  "sample_size_budgets": [10000, 100000, 200000],
+  "sample_size_budgets": [
+    10000,
+    100000,
+    200000
+  ],
   "main_rank": 64,
   "main_dt": 0.05,
   "step_check_beta": 0.5,
   "step_check_dt": 0.025,
-  "methods": ["FD", "RBF", "Legendre"],
+  "methods": [
+    "FD",
+    "RBF",
+    "Legendre"
+  ],
   "main_regime": "S",
-  "independent_regime_methods": ["RBF"],
+  "independent_regime_methods": [
+    "RBF"
+  ],
   "fd_grid_N": 201,
   "fd_cached_nonconstant_modes": 129,
   "rbf_n_per_direction": 12,
@@ -28,13 +48,33 @@
   "rbf_width_fraction": 0.075,
   "legendre_degree": 16,
   "legendre_dictionary_size": 153,
-  "fd_rank_scan": [8, 16, 32, 64, 128],
-  "learned_rank_scan": [16, 32, 64, 96],
+  "fd_rank_scan": [
+    8,
+    16,
+    32,
+    64,
+    128
+  ],
+  "learned_rank_scan": [
+    16,
+    32,
+    64,
+    96
+  ],
   "rank_scan_seed": 0,
   "density_floor": 0.001,
   "speed_cap": 20.0,
   "speed_cap_kind": "Euclidean vector norm",
-  "box": [[-2.8, 2.8], [-2.5, 2.5]],
+  "box": [
+    [
+      -2.8,
+      2.8
+    ],
+    [
+      -2.5,
+      2.5
+    ]
+  ],
   "initial_projection": false,
   "boundary": "Original box clipping at intermediate RK4 stages and completed updates",
   "integrator": "Original RK4 numerical operations; fixed coefficients calculated once from the prescribed S or I cloud",
@@ -44,11 +84,11 @@
   "projection_directions": 64,
   "reference_repetitions": 10,
   "standard_deviation_ddof": 1,
-  "expected_unique_runs": 156,
-  "max_beta_workers": 2,
+  "expected_unique_runs": 320,
+  "max_beta_workers": 1,
   "threads_per_worker": 1,
-  "old_source_parity_tolerance": 2e-9,
-  "cache_policy": "Existing training trajectories, targets and FD spectra are read-only and mandatory. Existing learned spectra are reused; a missing learned spectrum alone may be fitted with the original initializer and stored in this supplement.",
+  "old_source_parity_tolerance": 2e-09,
+  "cache_policy": "Preserve existing inputs and spectral caches; generate added trajectory seeds with the unchanged original simulator. Revision result rows are separate from the baseline.",
   "selection_policy": "All prescribed seeds, budgets and ranks are retained. No best-budget selection or replacement of failed runs.",
   "domain_expansion": "Deferred because changing pot.box also changes the projected process, dictionaries and FD spacing",
   "output_directory": "outputs/admissible_source"

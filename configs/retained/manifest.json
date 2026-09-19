@@ -1,30 +1,47 @@
 {
-  "description": "Configuration snapshots from local experiment archives; numerical datasets are excluded from Git.",
+  "description": "Configuration snapshots from local experiment archives, published with UTF-8/LF serialization. Snapshot and original archive-member byte hashes are recorded separately; their parsed JSON contents agree.",
   "files": {
     "configs/retained/alanine/config.json": {
       "archive": "alanine.zip",
       "member": "outputs/alanine/config.json",
-      "sha256": "25385bfebcac24c00886ef855b1179123fe0985409a775ef1951a781f3344182"
+      "sha256": "25385bfebcac24c00886ef855b1179123fe0985409a775ef1951a781f3344182",
+      "archive_member_sha256": "25385bfebcac24c00886ef855b1179123fe0985409a775ef1951a781f3344182"
     },
     "configs/retained/admissible_source/config.json": {
       "archive": "double_well.zip",
       "member": "outputs/admissible_source/config.json",
-      "sha256": "5b4c4b2bcb08f5fb4d2ebd7911169f92e2f7d727cd296fa564312a0012e93b66"
+      "sha256": "a7c6d26a5f37c354865e17a8b8d9360272378f5207decea03be96565355d8361",
+      "archive_member_sha256": "a7c6d26a5f37c354865e17a8b8d9360272378f5207decea03be96565355d8361"
     },
     "configs/retained/admissible_source/source_configuration.json": {
       "archive": "double_well.zip",
       "member": "outputs/admissible_source/source_configuration.json",
-      "sha256": "0f4487ee49f33ae9298bc6a8d2ce199cdf06930231cb97abb8dbfdc7705e94d9"
+      "sha256": "8f5fc8770781e5496e0ceaad0c0b1cb8cf6cc1b6342ccc46eb190d1e75ea4659",
+      "archive_member_sha256": "0f4487ee49f33ae9298bc6a8d2ce199cdf06930231cb97abb8dbfdc7705e94d9"
     },
     "configs/retained/data_comparison/config.json": {
       "archive": "double_well.zip",
       "member": "outputs/data_comparison/config.json",
-      "sha256": "e53829c3cfc5bf6490eea4cff8a754c86fcdd2c66f5405baf129f796b8787a69"
+      "sha256": "9aa6317ffc37117eb397c3cb267676510a2867a6c948f7c299fadb0389f64fca",
+      "archive_member_sha256": "9aa6317ffc37117eb397c3cb267676510a2867a6c948f7c299fadb0389f64fca"
     },
     "configs/retained/ou_path_validation/config.json": {
       "archive": "ou.zip",
       "member": "outputs/ou_path_validation/config.json",
-      "sha256": "81ff7d4483deead4ec07322f35e67007bfd3dba89c9dc28a307eae3c9ea0da84"
+      "sha256": "81ff7d4483deead4ec07322f35e67007bfd3dba89c9dc28a307eae3c9ea0da84",
+      "archive_member_sha256": "81ff7d4483deead4ec07322f35e67007bfd3dba89c9dc28a307eae3c9ea0da84"
+    },
+    "configs/retained/revision.json": {
+      "archive": "double_well.zip",
+      "member": "outputs/revision/configuration.json",
+      "sha256": "f156f82b9500482fdcce4058ed689393f3ad7e0f3ecaf206f9b34a248c9dcc49",
+      "archive_member_sha256": "f156f82b9500482fdcce4058ed689393f3ad7e0f3ecaf206f9b34a248c9dcc49"
+    },
+    "configs/retained/revision_followup.json": {
+      "archive": "double_well.zip",
+      "member": "outputs/revision/followup_config.json",
+      "sha256": "86da2d9009546e8f64a8292eae1acaa916a85593e54ada321904b80d62a6b7f4",
+      "archive_member_sha256": "7ee02ace483b037dbc272b082dc7ebe53d441059e9aa3983c814124ae3775d26"
     }
   }
 }

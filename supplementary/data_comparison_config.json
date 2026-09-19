@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "source_mean_x1": 1.0,
   "source_bump_half_width": 0.6,
   "source_bump_cdf_grid_points": 4001,
@@ -7,7 +7,7 @@
   "source_x2_variance": 0.3,
   "source_generator": "run_admissible_source.new_source; identical S-regime initial particles",
   "bkt_parity_reference": "admissible_source main RBF S, 200000 pairs, rank 64, step 0.05",
-  "resume_policy": "Require identical configuration, numerical source hashes, runtime, input hashes and verified endpoints; no reuse of aggregate historical timings",
+  "resume_policy": "Reuse atomically saved prescribed revision rows by run identity. Numerical settings are frozen; changed settings or runtime require a separate revision dataset. Original measurements used fresh fits and transports, not historical aggregate timings.",
   "betas": [
     0.0,
     0.5
@@ -17,7 +17,12 @@
     1,
     2,
     3,
-    4
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
   ],
   "training_pairs": 200000,
   "training_seed_base": 100,

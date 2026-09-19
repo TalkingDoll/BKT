@@ -9,10 +9,27 @@ PAPER_FONT_SIZES = {'base': 8.5, 'title': 11, 'panel': 9.5, 'axis': 9, 'ticks': 
 FONT_SIZES = {}
 LEGEND_GAP_PT = 32
 LEGEND_BOTTOM_MARGIN_PT = 18
+# Frozen insertion widths of the retained PDFs; permit figure reproduction in
+# the public code repository, which does not distribute the manuscript sources.
+RETAINED_WIDTH_INCHES = {
+    'fig_ou': 5.5,
+    'fig_ou10_marginals': 5.5,
+    'fig_ou_path_comparison': 5.5,
+    'fig_admissible_source_ranks': 5.5,
+    'fig_alanine': 4.95,
+    'fig_alanine_convergence': 3.41,
+    'fig_admissible_source_coefficients': 5.225,
+    'fig_data_comparison': 4.675,
+    'fig_ou10': 5.5,
+    'fig_hd10_dictionaries': 4.95,
+    'fig_hd50_dictionaries': 4.95,
+}
 
 
 def manuscript_width_inches(name):
     paper = ROOT / 'manuscript_iclr'
+    if not (paper/'iclr2027_conference.sty').exists() and name in RETAINED_WIDTH_INCHES:
+        return RETAINED_WIDTH_INCHES[name]
     style = (paper / 'iclr2027_conference.sty').read_text(encoding='utf-8')
     match = re.search(r'\\textwidth\s+([\d.]+)\s+(?:true\s+)?in\b', style)
     if not match:

@@ -139,7 +139,9 @@ def thickness(x):
 
 
 def integrate(source, lam, basis, moments, dic, taus, rtol=1e-8, method="DOP853", atol=1e-10,
-              max_evaluations=25000, max_seconds=180):
+              max_evaluations=25000, max_seconds=180,diagnostics=None):
+    from revision_common import PathMasks
+    watch=PathMasks(len(source),scope='All adaptive RHS evaluations, including rejected stages; torus wrapping is not box projection')
     started=time.perf_counter()
     times=np.asarray(taus)/lam[0]
     counts=dict(nfev=0,points=0,floored=0,clipped=0,min_rho=float("inf"))
@@ -156,17 +158,25 @@ def integrate(source, lam, basis, moments, dic, taus, rtol=1e-8, method="DOP853"
         rho,grad=dic.contract(flat.reshape(source.shape),coeff)
         velocity=-grad/np.maximum(rho,1e-3)[:,None]
         speed=np.linalg.norm(velocity,axis=1)
+        watch.velocity(rho,speed)
         counts["nfev"]+=1; counts["points"]+=len(source)
         counts["floored"]+=int(np.sum(rho<1e-3));counts["clipped"]+=int(np.sum(speed>20))
         counts["min_rho"]=min(counts["min_rho"],float(rho.min()))
         velocity*=np.minimum(1,20/np.maximum(speed,1e-12))[:,None]
         return velocity.ravel()
-    solution=solve_ivp(rhs,(times[0],times[-1]),source.ravel(),method=method,rtol=rtol,atol=atol,
-                       first_step=.0001,max_step=times[-1]/80,t_eval=times)
+    try:
+        solution=solve_ivp(rhs,(times[0],times[-1]),source.ravel(),method=method,rtol=rtol,atol=atol,
+                           first_step=.0001,max_step=times[-1]/80,t_eval=times)
+    finally:
+        if diagnostics is not None:
+            observed=watch.result();diagnostics['path_masks']=observed.pop('path_masks')
+            diagnostics['events']=dict(counts,**observed,seconds=time.perf_counter()-started)
     if not solution.success:raise RuntimeError(solution.message)
     counts.update(seconds=time.perf_counter()-started,success=True,method=method,rtol=rtol,atol=atol,
                   floor_fraction=counts["floored"]/counts["points"],clip_fraction=counts["clipped"]/counts["points"],
                   diagnostic_scope=f"Interval tau={taus[0]:g} to {taus[-1]:g}, including rejected solver stages")
+    path_info=watch.result();path_masks=path_info.pop('path_masks');counts.update(path_info)
+    if diagnostics is not None:diagnostics['path_masks']=path_masks
     return wrap(solution.y.T.reshape(len(times),*source.shape)),times,counts
 
 
@@ -193,9 +203,9 @@ def inputs(split):
     return train,reference,labels,centers,k,mean,covariance
 
 
-def fit_spectrum(train,case):
+def fit_spectrum(train,case,threads=1):
     started=time.perf_counter();dic=FourierDictionary(case['degree'])
-    with threadpool_limits(limits=4):
+    with threadpool_limits(limits=threads):
         gram,energy,mean=matrices(train,dic,case['smoothing'])
         gc=gram-np.outer(mean,mean)
         ev,u=eigh((gc+gc.T)/2)
@@ -210,7 +220,7 @@ def fit_spectrum(train,case):
     error=float(np.max(abs(vectors.T@gc@vectors-np.eye(len(lam)))))
     assert error<1e-5
     return lam,basis,dict(rank=len(lam),dictionary_size=dic.size,lambda1=float(lam[0]),
-             gram_kept=int(keep.sum()),orthogonality_error=error,fit_seconds=time.perf_counter()-started)
+             gram_kept=int(keep.sum()),orthogonality_error=error,fit_seconds=time.perf_counter()-started,threads=threads)
 
 
 def source_points(seed,n,mean,cov,design):

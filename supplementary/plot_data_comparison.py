@@ -24,7 +24,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.container import ErrorbarContainer
-from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
+from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter, MaxNLocator
 import numpy as np
 
 
@@ -141,9 +141,14 @@ def plot_comparison(betas, lookup, references, labels, figure_dir):
         ax.set_axisbelow(True)
         ax.tick_params(which="major", length=6, width=1)
     # Delay shared scaling until both panels and all SD intervals are present.
-    if lower <= 0:
-        raise ValueError("The full SD intervals cannot fit a logarithmic scale; use a linear or symlog axis")
-    axes[0].set_ylim(lower / 1.20, upper * 1.20)
+    logarithmic = lower > 0
+    if logarithmic:
+        axes[0].set_ylim(lower / 1.20, upper * 1.20)
+    else:
+        for ax in axes:
+            ax.set_yscale('linear');ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
+        span=upper-lower
+        axes[0].set_ylim(lower-.05*span,upper+.08*span)
     axes[0].set_ylabel(r"Sliced $W_2$ to the target")
     legend = shared_legend(fig, axes, labels)
     fig.canvas.draw()
@@ -173,7 +178,7 @@ def plot_comparison(betas, lookup, references, labels, figure_dir):
               "all_content_inside_canvas": inside, "all_error_bars_inside_axes": bars_inside,
               "methods_displayed": [labels[method] for method in METHODS],
               "standard_deviation_bars_truncated": False, "shared_y_limits": list(axes[0].get_ylim()),
-              "y_scale": "logarithmic; full mean +/- SD intervals unchanged",
+              "y_scale": ("logarithmic" if logarithmic else "linear")+"; full mean +/- SD intervals unchanged",
               "output_format": "pdf"}
     plt.close(fig)
     return result
@@ -236,9 +241,7 @@ def main():
     data, betas, lookup, references, labels = load_summary(args.data_dir / "summary.json")
     layout = plot_comparison(betas, lookup, references, labels, args.figure_dir)
     write_tables(data, betas, lookup, references, labels, args.data_dir)
-    if args.data_dir.resolve() == (ROOT / "outputs/data_comparison").resolve():
-        from manuscript_results import write_report
-        write_report()
+    # The revision publisher updates the unified report after all tasks finish.
     print(json.dumps({"figure": layout, "comparison_table_rows": len(METHODS),
                       "cost_table_rows": len(METHODS) * len(betas)}, indent=2))
 

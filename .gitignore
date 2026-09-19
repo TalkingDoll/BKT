@@ -26,6 +26,7 @@ venv/
 /outputs/*
 !/outputs/figures/
 !/outputs/all_experiment_results_and_assessment.md
+!/outputs/revision_results.json
 !/outputs/data/
 /outputs/data/*
 !/outputs/data/catalog.json

@@ -18,6 +18,7 @@ supplementary scripts reproduce individual studies and their figures.
 | [configs/retained/](configs/retained/) | Small configuration snapshots extracted from the local experiment archives |
 | [outputs/figures/](outputs/figures/) | All 11 retained figure PDFs |
 | [Experiment report](outputs/all_experiment_results_and_assessment.md) | Results, interpretation, and detailed reproduction commands |
+| [Per-realisation JSON](outputs/revision_results.json) | Group-B numerical records, all outcomes, corrected products, and alanine follow-up diagnostics |
 | [Data catalog](outputs/data/catalog.json) | Inventory, sizes, and SHA-256 hashes for local archived data |
 
 ## Environment
@@ -36,9 +37,9 @@ are relative to that root, so the folder can be moved or renamed.
 
 ## Local experiment data
 
-The four experiment archives, approximately 1.51 GB in total, are intentionally
+The four experiment archives, with current sizes recorded in the data catalog, are intentionally
 excluded from Git. They remain on the local machine. This repository publishes
-the code, configurations, report, and figures; a fresh clone does **not** contain
+the code, configurations, report, per-realisation JSON, and figures; a fresh clone does **not** contain
 the retained datasets, cached eigenpairs, or particle trajectories.
 
 To use workflows that read the retained results, copy the local archives into:
@@ -56,7 +57,10 @@ The report's `data/*.zip` links refer to these local files. They become usable
 after restoring the archives; the archives are not downloadable from this
 repository. Configuration snapshots in `configs/retained/` are for inspection
 and do not replace the archived numerical data. Their source members and
-checksums are listed in [manifest.json](configs/retained/manifest.json).
+checksums are listed in [manifest.json](configs/retained/manifest.json). Snapshot
+files use UTF-8/LF serialization for stable Git checksums; the manifest also
+records the original archive-member byte hashes and checks that the parsed
+configurations agree.
 
 With the archives restored, validate them without running experiments:
 
@@ -87,6 +91,32 @@ reproduction.
 The runnable synthetic configurations are under `supplementary/`. Alanine
 settings and the other archived configuration snapshots are also published in
 `configs/retained/`.
+
+The fixed B1--B4 revision is run by `supplementary/revision_queue.py`, followed
+by `revision_verify.py`, `revision_publish.py`, and `revision_figures.py`. The queue resumes prescribed
+realisations without outcome-based seed selection. Product indices are
+0--5 and 7--10: source seed 1+s skips target seed 7. It includes independent 10D
+mode selection, ten-repetition summaries, alanine estimation checks, and
+per-particle safeguard diagnostics. The report contains the results and any
+reproduction discrepancies; B5 is not included.
+
+The fixed group-B follow-up is reproduced with:
+
+```sh
+python -u -B supplementary/revision_followup.py run
+python -B supplementary/revision_verify.py
+python -B supplementary/revision_publish.py
+python -B supplementary/revision_figures.py --products-only
+```
+
+The follow-up reuses the unchanged nine product realisations and runs index 10
+only. It diagnoses all three archived alanine spectra and reruns the three
+distinct integrations fitted on trajectory 3 once with both resource budgets
+multiplied by five. Each path is evaluated against both other trajectories.
+All results, including incomplete paths and the explicitly excluded historical
+product index 6, are labelled in the same report and public JSON. The optional
+confined multiwell study is not run. Saved follow-up runs are resumed without
+repeating their integrations.
 
 ## Figures
 
