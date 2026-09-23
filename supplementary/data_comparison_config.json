@@ -1,0 +1,79 @@
+{
+  "version": 3,
+  "source_mean_x1": 1.0,
+  "source_bump_half_width": 0.6,
+  "source_bump_cdf_grid_points": 4001,
+  "source_bump_cdf_first_value": 0.0,
+  "source_x2_variance": 0.3,
+  "source_generator": "run_admissible_source.new_source; identical S-regime initial particles",
+  "bkt_parity_reference": "admissible_source main RBF S, 200000 pairs, rank 64, step 0.05",
+  "resume_policy": "Reuse saved prescribed rows by run identity under the fixed numerical configuration. Cost measurements include fresh fitting and transport.",
+  "betas": [
+    0.0,
+    0.5
+  ],
+  "source_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "training_pairs": 200000,
+  "training_seed_base": 100,
+  "source_seed_base": 500,
+  "target_seed": 7,
+  "particles": 2000,
+  "lag": 0.1,
+  "training_chains": 500,
+  "training_burn": 20.0,
+  "simulation_step": 0.002,
+  "target_burn": 40.0,
+  "dictionary_n_per_direction": 12,
+  "dictionary_size": 145,
+  "dictionary_width_fraction": 0.075,
+  "retained_nonconstant_modes": 64,
+  "bkt_step": 0.05,
+  "bkt_density_floor": 0.001,
+  "bkt_speed_cap": 20.0,
+  "drift_estimator": "finite-lag gradient-constrained ridge least squares",
+  "drift_ridge_after_column_scaling": 1e-08,
+  "kde_integrator": "RK4",
+  "kde_step": 0.05,
+  "kde_bandwidth": "multivariate Silverman full covariance, recomputed at each RK4 stage",
+  "kde_covariance_ridge": 1e-08,
+  "kde_self_contribution": true,
+  "kde_block_size": 256,
+  "kde_score_evaluation": "exact Gaussian pair interactions; no truncation or subsampling",
+  "kde_velocity": "estimated_drift - current_particle_KDE_score",
+  "box": [
+    [
+      -2.8,
+      2.8
+    ],
+    [
+      -2.5,
+      2.5
+    ]
+  ],
+  "boundary": "componentwise projection at RK stages and completed steps, matching the existing A model",
+  "horizon_rule": "shared per beta: round((8 / existing FD-201 lambda1) / 0.05) * 0.05, matching the existing BKT endpoint",
+  "checkpoint_interval": 0.5,
+  "projection_seed": 0,
+  "projections": 64,
+  "reference_repetitions": 10,
+  "hit_threshold_description": "SW2 at a prespecified common checkpoint <= independent-target-pair reference mean + sample SD",
+  "timing": "Single-thread fitting and sampling measured separately; drift fitting included in KDE flow cost; input generation and metric callbacks excluded. Original per-run timings retained without remeasurement.",
+  "data_budget_interpretation": "same available stationary trajectory-pair pool; each retained method fits from all 200000 pairs; no minimum-data search",
+  "output_directory": "outputs/data_comparison",
+  "failure_policy": "record nonfinite or failed runs; no seed selection, parameter tuning or replacement; do not silently aggregate successful subsets",
+  "methods": [
+    "A",
+    "D"
+  ]
+}

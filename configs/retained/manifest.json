@@ -1,0 +1,41 @@
+{
+  "description": "Configuration snapshots from local experiment archives, published with UTF-8/LF serialization. Snapshot and original archive-member byte hashes are recorded separately; their parsed JSON contents agree.",
+  "files": {
+    "configs/retained/alanine/config.json": {
+      "archive": "alanine.zip",
+      "member": "outputs/alanine/config.json",
+      "sha256": "25385bfebcac24c00886ef855b1179123fe0985409a775ef1951a781f3344182",
+      "archive_member_sha256": "25385bfebcac24c00886ef855b1179123fe0985409a775ef1951a781f3344182"
+    },
+    "configs/retained/admissible_source/config.json": {
+      "archive": "double_well.zip",
+      "member": "outputs/admissible_source/config.json",
+      "sha256": "d3508c0a2dec9004b7f3d8d470954230c8fcc92004878d33bff5a6883952d2c1",
+      "archive_member_sha256": "d3508c0a2dec9004b7f3d8d470954230c8fcc92004878d33bff5a6883952d2c1"
+    },
+    "configs/retained/admissible_source/source_configuration.json": {
+      "archive": "double_well.zip",
+      "member": "outputs/admissible_source/source_configuration.json",
+      "sha256": "8f5fc8770781e5496e0ceaad0c0b1cb8cf6cc1b6342ccc46eb190d1e75ea4659",
+      "archive_member_sha256": "0f4487ee49f33ae9298bc6a8d2ce199cdf06930231cb97abb8dbfdc7705e94d9"
+    },
+    "configs/retained/data_comparison/config.json": {
+      "archive": "double_well.zip",
+      "member": "outputs/data_comparison/config.json",
+      "sha256": "33df91f4ef5adcf154162e3b4ba548e623b521a7014eb54b989145841bdad060",
+      "archive_member_sha256": "33df91f4ef5adcf154162e3b4ba548e623b521a7014eb54b989145841bdad060"
+    },
+    "configs/retained/ou_path_validation/config.json": {
+      "archive": "ou.zip",
+      "member": "outputs/ou_path_validation/config.json",
+      "sha256": "81ff7d4483deead4ec07322f35e67007bfd3dba89c9dc28a307eae3c9ea0da84",
+      "archive_member_sha256": "81ff7d4483deead4ec07322f35e67007bfd3dba89c9dc28a307eae3c9ea0da84"
+    },
+    "configs/retained/revision.json": {
+      "archive": "double_well.zip",
+      "member": "outputs/revision/configuration.json",
+      "sha256": "f393195fb4eb755bb71e51b7ff0dcebd12f5b7abbac9c59175a5124b41bf9ecd",
+      "archive_member_sha256": "f393195fb4eb755bb71e51b7ff0dcebd12f5b7abbac9c59175a5124b41bf9ecd"
+    }
+  }
+}
