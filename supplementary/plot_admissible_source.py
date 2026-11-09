@@ -325,19 +325,6 @@ def export_tables(data, runs, main, stats, betas, references, labels, output_dir
                              "r_used_values": ",".join(str(int(value)) for value in sorted({row["r_used"] for row in group})),
                              "sw2_mean": item["mean"], "sw2_std": item["std"], "n": item["n"]})
     write_csv(output_dir / "rank_scan_table.csv", rank_records)
-    sample_groups = group_rows(rows_for(runs, "sample_size"), ("beta", "n_pairs"))
-    sample_budgets = sorted({key[1] for key in sample_groups})
-    sample_records = []
-    for beta in betas:
-        for budget in sample_budgets:
-            group = sample_groups[(beta, budget)]
-            if any(row["method"] != "RBF" or row["regime"] != "S" for row in group):
-                raise ValueError("The source-budget table is defined for same-sample RBF")
-            item = moments(row["sw2"] for row in group)
-            sample_records.append({"beta": beta, "n_pairs": budget, "n": item["n"],
-                                   "sw2_mean": item["mean"], "sw2_std": item["std"]})
-    if sample_records:
-        write_csv(output_dir / "sample_size_table.csv", sample_records)
     step_groups = group_rows(rows_for(runs, "step_check"), ("beta", "method", "regime", "dt"))
     step_records = []
     for beta, method, regime in sorted({key[:3] for key in step_groups}):

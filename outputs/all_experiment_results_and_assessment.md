@@ -18,7 +18,6 @@ Synthetic multivariate distances use 64 fixed projections (seed 0); references u
 | Experiment | Setup |
 |---|---|
 | 1D OU | N(1.5,0.5^2) to N(0,1); Hermite spectrum; RK4 h=0.05; initial-particle coefficients (S). |
-| Matched OU paths | M=2000; r=10,20,40; T=6; h=0.05,0.025; seeds 1000-1009; P/I/S; all 180 runs. |
 | 10D OU | Coupling 0 and 0.15; M=5000; 30 modes/coordinate; T=6; h=0.05; seeds 700-709. |
 | 2D double wells | beta=0,0.25,0.5,1; M=2000; n=200000; r=64; RBF J=145; FD-201; T=8/lambda1; h=0.05. |
 | 4/9 wells | M=2000; n=200000; r=64; RBF/Legendre/FD-201; h=0.02; ten seeds. |
@@ -36,29 +35,13 @@ The synthetic ratio floor is 0.001 and speed cap is 20. The boxed double-well so
 | Particles (r=40, T=6) | 500, 1000, 2000, 5000, 20000 | 0.0384, 0.0300, 0.0242, 0.0117, 0.0103 |
 | Time (r=40) | 1.0, 2.0, 3.0, 4.0, 6.0 | 0.5560, 0.2044, 0.0765, 0.0311, 0.0144 |
 
-At M=10000 the reference is 0.0189 +/- 0.0049. The 1D notebook scans use midpoint quantiles; the matched path diagnostic uses exact Gaussian quantile-interval integrals.
+At M=10000 the reference is 0.0189 +/- 0.0049. The 1D notebook scans use midpoint quantiles.
 
 | 10D coupling | Final SW2 | Reference SW2 | Relative covariance error |
 |---|---|---|---|
 | 0.0 | 0.0219 +/- 0.0004 | 0.0262 +/- 0.0026 | 0.0425 +/- 0.0050 |
 | 0.15 | 0.0195 +/- 0.0005 | 0.0235 +/- 0.0018 | 0.0421 +/- 0.0059 |
 
-
-| Matched OU, h=0.025 | Regime | W2 to target | Endpoint D | Residual-norm B |
-|---|---|---|---|---|
-| 10 | P | 0.1020 +/- 0.0180 | 0.0953 +/- 0.0058 | 0.2529 +/- 0.0203 |
-| 10 | I | 0.1104 +/- 0.0144 | 0.1011 +/- 0.0108 | 0.2664 +/- 0.0260 |
-| 10 | S | 0.0961 +/- 0.0094 | 0.1020 +/- 0.0096 | 0.2563 +/- 0.0168 |
-| 20 | P | 0.0533 +/- 0.0135 | 0.0249 +/- 0.0029 | 0.0433 +/- 0.0062 |
-| 20 | I | 0.0668 +/- 0.0151 | 0.0415 +/- 0.0116 | 0.0590 +/- 0.0129 |
-| 20 | S | 0.0382 +/- 0.0065 | 0.0456 +/- 0.0164 | 0.0629 +/- 0.0191 |
-| 40 | P | 0.0447 +/- 0.0151 | 0.0015 +/- 0.0008 | 0.0200 +/- 0.0006 |
-| 40 | I | 0.0609 +/- 0.0170 | 0.0330 +/- 0.0119 | 0.0504 +/- 0.0146 |
-| 40 | S | 0.0227 +/- 0.0045 | 0.0411 +/- 0.0163 | 0.0545 +/- 0.0152 |
-
-Exact-flow image of the same finite cloud: 0.0448 +/- 0.0152; independent-target reference: 0.0391 +/- 0.0096. P gives the smaller discrepancy from the paired exact trajectories; S gives the smaller empirical target distance. I uses 2000 extra source points. The same-sample corollary compares P and S under additional deterministic common-region bounds; those hypotheses are not verified by these experiments.
-
-D is checked from endpoints and signed residual integration; B takes the norm before time integration. The maximum endpoint-identity RMS discrepancy is 2.7e-16. Quadrature and step differences are numerical diagnostics, not rigorously enclosed certificates. All ranks and both steps remain in the saved results.
 
 | OU rank | Minimum ratio at t=0 | Screened Lipschitz integral | Minimum good-region mass |
 |---|---|---|---|
@@ -102,17 +85,6 @@ Rank scans use the first source seed; they retain nonmonotone and unstable resul
 | 9 wells | FD | r=8: 0.325, r=16: 0.199, r=32: 0.049, r=64: 0.036, r=128: 0.032 |
 | 9 wells | Koopman (RBF) | r=8: 0.309, r=16: 0.188, r=32: 0.063, r=64: 0.063, r=96: 0.062 |
 | 9 wells | Koopman (Legendre) | r=8: 0.911, r=16: 1.559, r=32: 2.345, r=64: 1.637, r=96: 1.882 |
-
-
-| System | n=10000 | n=100000 | n=200000 |
-|---|---|---|---|
-| 2D double well product, beta=0 | 0.0345 +/- 0.0041 | 0.0285 +/- 0.0025 | 0.0276 +/- 0.0027 |
-| 2D double well, beta=0.25 | 0.0364 +/- 0.0043 | 0.0309 +/- 0.0037 | 0.0295 +/- 0.0027 |
-| 2D double well, beta=0.5 | 0.0373 +/- 0.0077 | 0.0308 +/- 0.0039 | 0.0305 +/- 0.0043 |
-| 2D double well, beta=1 | 0.0532 +/- 0.0201 | 0.0284 +/- 0.0022 | 0.0273 +/- 0.0027 |
-| 2D four-well product | 0.0475 +/- 0.0128 | 0.0294 +/- 0.0037 | 0.0281 +/- 0.0024 |
-| 2D nine wells | 0.0866 +/- 0.0240 | 0.0561 +/- 0.0063 | 0.0548 +/- 0.0063 |
-| 10D double well product, beta=0 | 0.0684 +/- 0.0039 | 0.0610 +/- 0.0020 | 0.0603 +/- 0.0042 |
 
 
 | 2D beta | Independent I | Same-sample S |
@@ -355,8 +327,8 @@ The queue resumes completed prescribed rows; it does not replace failed seeds. E
 
 For the retained product protocol, source indices are 0--5 and 7--10, so no source seed equals target seed 7. The regular product runners use these indices directly.
 
-The matched OU P/I/S experiment has 180 runs, ranks 10, 20, 40, two steps and ten source seeds. Its dedicated runner is `ou_path_validation.py`. The alanine distribution and convergence figures use the same three Fourier BKT trajectories at s=8. Fitting and transport costs and two held-out evaluations are reported for the fixed fit. Analytical OU distances use the Gaussian reference; alanine SW2 uses its fixed periodic embedding.
+The alanine distribution and convergence figures use the same three Fourier BKT trajectories at s=8. Fitting and transport costs and two held-out evaluations are reported for the fixed fit. Analytical OU distances use the Gaussian reference; alanine SW2 uses its fixed periodic embedding.
 
-`manuscript_results.py` regenerates this report without simulations. `--tables` regenerates CSV tables; `--check` checks canonical endpoint distances and the retained matched OU calculations. `alanine_experiment.py --stage verify` and `alanine_convergence.py --stage verify` check their original saved clouds. The latter checks the frozen protocol and inputs and reports the stored/current source-code fingerprints separately: adding path observations changes the source hash. Fresh run and shard provenance checks remain strict. Saved-array verification checks the reported metrics and numerical safeguard masks.
+`manuscript_results.py` regenerates this report without simulations. `--tables` regenerates CSV tables; `--check` checks canonical endpoint distances. `alanine_experiment.py --stage verify` and `alanine_convergence.py --stage verify` check their original saved clouds. The latter checks the frozen protocol and inputs and reports the stored/current source-code fingerprints separately: adding path observations changes the source hash. Fresh run and shard provenance checks remain strict. Saved-array verification checks the reported metrics and numerical safeguard masks.
 
 The shared printed typography is defined in `figure_style.py`: overall title 11 pt, panel title 9.5 pt, axis label 9 pt, ticks 8.5 pt, legend 8 pt, all normal weight. Canvas dimensions and manuscript insertion widths determine export scaling. Where manuscript sources are absent, frozen widths from the retained PDFs are used. The admissible-source rank figure remains 1-by-4. Product histograms use source seed 1, while their marginal-error panels show mean and sample SD over the ten prescribed realisations. Error bars are not confidence intervals.

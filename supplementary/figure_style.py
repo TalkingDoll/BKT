@@ -12,16 +12,12 @@ LEGEND_BOTTOM_MARGIN_PT = 18
 # Frozen insertion widths of the retained PDFs; permit figure reproduction in
 # the public code repository, which does not distribute the manuscript sources.
 RETAINED_WIDTH_INCHES = {
-    'fig_ou': 5.5,
-    'fig_ou10_marginals': 5.5,
-    'fig_ou_path_comparison': 5.5,
     'fig_admissible_source_ranks': 5.5,
     'fig_alanine': 4.95,
     'fig_alanine_convergence': 3.41,
     'fig_admissible_source_coefficients': 5.225,
     'fig_data_comparison': 4.675,
     'fig_ou10': 5.5,
-    'fig_hd10_dictionaries': 4.95,
     'fig_hd50_dictionaries': 4.95,
 }
 

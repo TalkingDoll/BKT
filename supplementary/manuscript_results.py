@@ -31,9 +31,9 @@ The queue resumes completed prescribed rows; it does not replace failed seeds. E
 
 For the retained product protocol, source indices are 0--5 and 7--10, so no source seed equals target seed 7. The regular product runners use these indices directly.
 
-The matched OU P/I/S experiment has 180 runs, ranks 10, 20, 40, two steps and ten source seeds. Its dedicated runner is `ou_path_validation.py`. The alanine distribution and convergence figures use the same three Fourier BKT trajectories at s=8. Fitting and transport costs and two held-out evaluations are reported for the fixed fit. Analytical OU distances use the Gaussian reference; alanine SW2 uses its fixed periodic embedding.
+The alanine distribution and convergence figures use the same three Fourier BKT trajectories at s=8. Fitting and transport costs and two held-out evaluations are reported for the fixed fit. Analytical OU distances use the Gaussian reference; alanine SW2 uses its fixed periodic embedding.
 
-`manuscript_results.py` regenerates this report without simulations. `--tables` regenerates CSV tables; `--check` checks canonical endpoint distances and the retained matched OU calculations. `alanine_experiment.py --stage verify` and `alanine_convergence.py --stage verify` check their original saved clouds. The latter checks the frozen protocol and inputs and reports the stored/current source-code fingerprints separately: adding path observations changes the source hash. Fresh run and shard provenance checks remain strict. Saved-array verification checks the reported metrics and numerical safeguard masks.
+`manuscript_results.py` regenerates this report without simulations. `--tables` regenerates CSV tables; `--check` checks canonical endpoint distances. `alanine_experiment.py --stage verify` and `alanine_convergence.py --stage verify` check their original saved clouds. The latter checks the frozen protocol and inputs and reports the stored/current source-code fingerprints separately: adding path observations changes the source hash. Fresh run and shard provenance checks remain strict. Saved-array verification checks the reported metrics and numerical safeguard masks.
 
 The shared printed typography is defined in `figure_style.py`: overall title 11 pt, panel title 9.5 pt, axis label 9 pt, ticks 8.5 pt, legend 8 pt, all normal weight. Canvas dimensions and manuscript insertion widths determine export scaling. Where manuscript sources are absent, frozen widths from the retained PDFs are used. The admissible-source rank figure remains 1-by-4. Product histograms use source seed 1, while their marginal-error panels show mean and sample SD over the ten prescribed realisations. Error bars are not confidence intervals.
 """
@@ -278,21 +278,6 @@ def append_alanine_convergence(lines):
         f"**Suggested caption.** Alanine convergence over normalized flow time s in [0, {horizon:g}]. The mean BKT error decreases rapidly at small flow times and then varies little over the remaining interval. Lines and shading show mean and sample standard deviation of sliced Wasserstein error over three paired source/reference designs, with {spec['particles']} particles per method. BKT and LAWGD share 256 nonconstant eigenfunctions and initial empirical coefficients; KDE uses the same training angles and initial/reference clouds. KDE is a classical diffusion-velocity particle method with a fixed estimated target score and feedback through a kernel estimate of the current density. Numerical controls are method-specific. The horizontal axis denotes normalized flow time, not physical MD time or computation time."]
 
 
-def sample_size_rows():
-    """Rebuild the appendix sensitivity table from all prescribed seed rows."""
-    rows=[];study=read_json('admissible_source/summary.json')
-    primary=read_json('results.json');budgets=study['config']['sample_size_budgets']
-    for beta in study['config']['betas']:
-        for n in budgets:
-            values=[r['sw2'] for r in study['runs'] if r['beta']==beta and r['n_pairs']==n and 'sample_size' in r['roles']]
-            rows.append(dict(system=f'A2_beta{beta}',n_pairs=n,**complete_mean_sd(values)))
-    for name in ['B_quartic4','B_poly9','A10_beta0.0']:
-        for n in budgets:
-            values=[r['sw'] for r in primary[name]['sample_size'][str(n)]]
-            rows.append(dict(system=name,n_pairs=n,**complete_mean_sd(values)))
-    return dict(budgets=budgets,rows=rows)
-
-
 def write_tables():
     """Export both manuscript tables from the current source protocol."""
     from experiment_store import managed_outputs
@@ -339,16 +324,12 @@ def write_tables():
             for name,case in primary.items():
                 for i,mass in enumerate(case.get('target',{}).get('mass2d',[])):
                     writer.writerow([name,i,mass])
-        with (folder/'sample_size.csv').open('w',newline='',encoding='utf-8') as stream:
-            records=sample_size_rows()['rows']
-            writer=csv.DictWriter(stream,list(records[0]));writer.writeheader();writer.writerows(records)
     print('Exported current manuscript tables.')
 
 
 def verify_saved_results():
-    """Recompute stored cloud metrics and rerun every matched OU trajectory."""
+    """Recompute stored cloud metrics of the saved runs."""
     from threadpoolctl import threadpool_limits
-    import ou_path_validation as ou
     from run_admissible_source import specifications, run_id
     checked={};largest=0.
     with threadpool_limits(limits=1):
@@ -380,38 +361,7 @@ def verify_saved_results():
                     assert error<1e-12,(study,key,error)
             checked[study]=count
             print(f'{study}: all {count} endpoint metrics and prescribed runs verified.',flush=True)
-        config=read_json('ou_path_validation/config.json')
-        rows=read_json('ou_path_validation/runs.json')
-        assert len(rows)==180
-        keys={(r['seed'],r['r'],r['dt'],r['regime']) for r in rows}
-        assert keys=={(s,r,h,c) for s in config['seeds'] for r in config['ranks'] for h in config['steps'] for c in config['regimes']}
-        endpoint_error=residual_error=0.
-        for seed in config['seeds']:
-            with np.load(io.BytesIO(read_bytes(f'ou_path_validation/paths_seed_{seed}.npz'))) as z:
-                sequences=np.random.SeedSequence(seed).spawn(3)
-                source=np.random.default_rng(sequences[0]).normal(config['source_mean'],config['source_std'],config['particles'])
-                np.testing.assert_array_equal(source,z['X0'])
-                independent=np.random.default_rng(sequences[1]).normal(config['source_mean'],config['source_std'],config['particles'])
-                np.testing.assert_array_equal(independent,z['independent_X0'])
-                np.testing.assert_array_equal(np.random.default_rng(sequences[2]).standard_normal(config['particles']),z['target_reference'])
-                for row in [r for r in rows if r['seed']==seed]:
-                    rank,regime,dt=row['r'],row['regime'],row['dt']
-                    c=ou.population_coefficients(config['source_mean'],config['source_std'],rank) if regime=='P' else ou.empirical_coefficients(independent if regime=='I' else source,rank)
-                    np.testing.assert_array_equal(c,z[f'coeff_{regime}_r{rank}'])
-                    times,paths,diag=ou.transport(source,c,config['horizon'],dt,config['density_floor'],config['velocity_cap'])
-                    key=f"{regime}_r{rank}_h{round(dt*1000):03d}"
-                    endpoint_error=max(endpoint_error,float(np.max(abs(paths[-1]-z['endpoint_'+key]))))
-                    assert endpoint_error<1e-12
-                    residual,_=ou.checked_residual(times,paths,config['source_mean'],config['source_std'],config['quadrature'])
-                    for name in ['D','B','identity_rms_error']:
-                        error=abs(residual[name]-row[name]);residual_error=max(residual_error,error)
-                        assert error<1e-10,(seed,key,name,error)
-                    assert abs(ou.gaussian_w2(paths[-1])-row['w2_target'])<1e-12
-                    for name in ['density_floor_events','nonpositive_density_events','speed_cap_events']:
-                        assert diag[name]==row[name]
-            print(f'OU seed {seed}: all 18 transports, residual bounds and safeguard counts reproduced.',flush=True)
-        checked.update(ou_transports=180,max_sw2_difference=largest,
-                       ou_endpoint_max_difference=endpoint_error,ou_residual_max_difference=residual_error)
+        checked.update(max_sw2_difference=largest)
     print(json.dumps(checked,indent=2))
     return checked
 
@@ -446,15 +396,10 @@ def write_report():
     table(lines,['Scan','Values','W2'],[
         [name,', '.join(str(r[key]) for r in ou[scan]),', '.join(f"{r['w2']:.4f}" for r in ou[scan])]
         for scan,key,name in [('rank_scan','r','Rank (M=10000, T=6)'),('particle_scan','M','Particles (r=40, T=6)'),('time_scan','T','Time (r=40)')]])
-    lines += [f"At M=10000 the reference is {pm(ou['reference']['metrics']['w2'])}. The 1D notebook scans use midpoint quantiles; the matched path diagnostic uses exact Gaussian quantile-interval integrals."]
+    lines += [f"At M=10000 the reference is {pm(ou['reference']['metrics']['w2'])}. The 1D notebook scans use midpoint quantiles."]
     table(lines,['10D coupling','Final SW2','Reference SW2','Relative covariance error'],[
         [d['config']['coupling'],pm(d['time_summary'][-1]['metrics']['sw2']),pm(d['reference']['metrics']['sw2']),pm(d['time_summary'][-1]['metrics']['covariance_relative_error'])]
         for d in [read_json('ou_hd_uncoupled_results.json'),read_json('ou_hd_results.json')]])
-    p=read_json('ou_path_validation/summary.json')
-    table(lines,['Matched OU, h=0.025','Regime','W2 to target','Endpoint D','Residual-norm B'],[
-        [g['r'],g['regime'],pm(g['metrics']['w2_target']),pm(g['metrics']['D']),pm(g['metrics']['B'])] for g in p['groups'] if g['dt']==.025])
-    lines += [f"Exact-flow image of the same finite cloud: {pm(p['references']['exact_flow_w2'])}; independent-target reference: {pm(p['references']['target_reference_w2'])}. P gives the smaller discrepancy from the paired exact trajectories; S gives the smaller empirical target distance. I uses 2000 extra source points. The same-sample corollary compares P and S under additional deterministic common-region bounds; those hypotheses are not verified by these experiments.",'',
-        'D is checked from endpoints and signed residual integration; B takes the norm before time integration. The maximum endpoint-identity RMS discrepancy is 2.7e-16. Quadrature and step differences are numerical diagnostics, not rigorously enclosed certificates. All ranks and both steps remain in the saved results.']
     table(lines,['OU rank','Minimum ratio at t=0','Screened Lipschitz integral','Minimum good-region mass'],[
         [r['r'],f"{r['density_ratio_minima'][0]:.4f}",f"{r['lipschitz_integral_good']:.4f}",f"{r['min_good_mass']:.4f}"] for r in read_json('ou_diagnostics.json')['rows']])
     lines+=['## Double wells, multiwells and products', '', 'Koopman (RBF) and Koopman (Legendre) denote generator eigenpairs estimated by reversible gEDMD with the respective dictionaries. These labels distinguish spectral approximations in the same BKT transport formula; FD denotes the finite-difference spectrum.']
@@ -485,13 +430,6 @@ def write_report():
         for method,scan in [('FD',r['fd_rscan']),('Koopman (RBF)',r['rbf']['rscan']),('Koopman (Legendre)',r['poly']['rscan'])]:
             rows.append([label,method,', '.join(f"r={rank}: {v['sw']:.3f}" if v['sw'] is not None else f"r={rank}: failed" for rank,v in sorted(scan.items(),key=lambda x:int(x[0])))])
     table(lines,['System','Spectrum','SW2 by rank'],rows)
-    b=sample_size_rows()
-    system_labels={f'A2_beta{beta}':f'2D double well{" product" if beta==0 else ""}, beta={beta:g}' for beta in a['config']['betas']}
-    system_labels.update(B_quartic4='2D four-well product',B_poly9='2D nine wells',
-                         **{'A10_beta0.0':'10D double well product, beta=0'})
-    table(lines,['System',*[f'n={n}' for n in b['budgets']]],[
-        [system_labels[name],*[pm(next(r for r in b['rows'] if r['system']==name and r['n_pairs']==n)) for n in b['budgets']]]
-        for name in dict.fromkeys(r['system'] for r in b['rows'])])
     table(lines,['2D beta','Independent I','Same-sample S'],[
         [beta,*[pm(r['sw2'] for r in a['runs'] if r['beta']==beta and r['method']=='RBF' and r['regime']==regime and 'coefficient_comparison' in r['roles']) for regime in ['I','S']]] for beta in a['config']['betas']])
     lines+=['I uses an extra 2000 independent source draws, with coefficients fixed thereafter. Harmonic-coordinate variance 0.3 satisfies the bounded-ratio source condition for all four 2D cases; box projection and estimated eigenpairs still prevent verification of every theorem hypothesis.','']

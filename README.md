@@ -109,14 +109,10 @@ without the exploratory runs or revision history.
 
 ## Figures
 
-- [1D Ornstein-Uhlenbeck](outputs/figures/fig_ou.pdf)
 - [10D Ornstein-Uhlenbeck](outputs/figures/fig_ou10.pdf)
-- [10D OU marginals](outputs/figures/fig_ou10_marginals.pdf)
-- [Matched OU paths](outputs/figures/fig_ou_path_comparison.pdf)
 - [Double-well rank comparison](outputs/figures/fig_admissible_source_ranks.pdf)
 - [Coefficient regimes](outputs/figures/fig_admissible_source_coefficients.pdf)
 - [Equal-data comparison](outputs/figures/fig_data_comparison.pdf)
-- [10D product](outputs/figures/fig_hd10_dictionaries.pdf)
 - [50D product](outputs/figures/fig_hd50_dictionaries.pdf)
 - [Alanine distribution](outputs/figures/fig_alanine.pdf)
 - [Alanine convergence](outputs/figures/fig_alanine_convergence.pdf)

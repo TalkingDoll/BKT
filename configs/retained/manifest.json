@@ -25,12 +25,6 @@
       "sha256": "33df91f4ef5adcf154162e3b4ba548e623b521a7014eb54b989145841bdad060",
       "archive_member_sha256": "33df91f4ef5adcf154162e3b4ba548e623b521a7014eb54b989145841bdad060"
     },
-    "configs/retained/ou_path_validation/config.json": {
-      "archive": "ou.zip",
-      "member": "outputs/ou_path_validation/config.json",
-      "sha256": "81ff7d4483deead4ec07322f35e67007bfd3dba89c9dc28a307eae3c9ea0da84",
-      "archive_member_sha256": "81ff7d4483deead4ec07322f35e67007bfd3dba89c9dc28a307eae3c9ea0da84"
-    },
     "configs/retained/revision.json": {
       "archive": "double_well.zip",
       "member": "outputs/revision/configuration.json",
