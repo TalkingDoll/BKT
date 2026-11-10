@@ -1,7 +1,7 @@
 """Figures of the experiments added in the revision, in the style of the figures of the submission.
 
-Reads the result files in results/ and writes figures/fig_lawgd_double_wells.pdf (Figure 11),
-figures/fig_barrier_scan.pdf (Figure 12) and figures/fig_coupled3d.pdf (three-dimensional example).
+Reads the result files in results/ and writes figures/fig_lawgd_double_wells.pdf (Figure 8),
+figures/fig_barrier_scan.pdf (Figure 9) and figures/fig_coupled3d.pdf (three-dimensional example).
 Independent panels carry their quantity as a title. A shared quantity of a row is written once on the left.
 Legends are placed below the panels."""
 import json, os

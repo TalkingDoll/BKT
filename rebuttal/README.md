@@ -5,5 +5,5 @@
 | Path | Contents |
 |---|---|
 | `results/` | Result files of the runs reported in the paper (also embedded in the notebook) |
-| `figures/` | Figures 11 and 12 of the paper and the figure of the three-dimensional example |
+| `figures/` | Figures 8 and 9 of the paper and the figure of the three-dimensional example |
 | `rerun_check/` | Scripts and report of a rerun of all scripts from scratch, compared with the files in `results/` |

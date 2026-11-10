@@ -8,10 +8,10 @@ Synthetic multivariate distances use 64 fixed projections (seed 0); references u
 
 | Manuscript item | Retained configuration |
 |---|---|
-| Figure 1 and dictionary tables | Koopman (RBF) and Koopman (Legendre) identify reversible gEDMD generator estimates; all use the same BKT transport. Figure 1 shows one fixed realisation, whereas repeated table entries report means and sample standard deviations. |
+| Rank figure and dictionary tables | Koopman (RBF) and Koopman (Legendre) identify reversible gEDMD generator estimates; all use the same BKT transport. The rank figure shows one fixed realisation, whereas repeated table entries report means and sample standard deviations. |
 | Table 1 | 10D double well product, beta=0: one double-well factor and nine stationary Gaussian factors. 50D double-well product: fifty double-well factors. Product refers to the invariant density; the potential is additive. |
-| [Figure 10](figures/fig_alanine.pdf) | 256-mode BKT at s=8, seeds 1101-1103, empirical initial coefficients. The angle panels show seed 1101; the error panel includes all three paired designs. |
-| [Figure 11](figures/fig_alanine_convergence.pdf) | The same BKT trajectories over 0 <= s <= 8, compared with LAWGD and KDE. BKT and LAWGD share the 256 eigenpairs and initial empirical coefficients. |
+| [Alanine distribution figure](figures/fig_alanine.pdf) | 256-mode BKT at s=8, seeds 1101-1103, empirical initial coefficients. The angle panels show seed 1101; the error panel includes all three paired designs. |
+| [Alanine convergence figure](figures/fig_alanine_convergence.pdf) | The same BKT trajectories over 0 <= s <= 8, compared with LAWGD and KDE. BKT and LAWGD share the 256 eigenpairs and initial empirical coefficients. |
 
 ## Fixed protocols
 

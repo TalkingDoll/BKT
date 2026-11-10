@@ -376,14 +376,13 @@ def write_report():
         'Synthetic multivariate distances use 64 fixed projections (seed 0); references use ten target-cloud repetitions. The analytical OU studies compare directly with the Gaussian target. References describe empirical sampling variability and are not universal lower bounds. Alanine has a separate periodic metric.','',
         '## Manuscript correspondence']
     table(lines,['Manuscript item','Retained configuration'],[
-        ['Figure 1 and dictionary tables','Koopman (RBF) and Koopman (Legendre) identify reversible gEDMD generator estimates; all use the same BKT transport. Figure 1 shows one fixed realisation, whereas repeated table entries report means and sample standard deviations.'],
+        ['Rank figure and dictionary tables','Koopman (RBF) and Koopman (Legendre) identify reversible gEDMD generator estimates; all use the same BKT transport. The rank figure shows one fixed realisation, whereas repeated table entries report means and sample standard deviations.'],
         ['Table 1','10D double well product, beta=0: one double-well factor and nine stationary Gaussian factors. 50D double-well product: fifty double-well factors. Product refers to the invariant density; the potential is additive.'],
-        ['[Figure 10](figures/fig_alanine.pdf)','256-mode BKT at s=8, seeds 1101-1103, empirical initial coefficients. The angle panels show seed 1101; the error panel includes all three paired designs.'],
-        ['[Figure 11](figures/fig_alanine_convergence.pdf)','The same BKT trajectories over 0 <= s <= 8, compared with LAWGD and KDE. BKT and LAWGD share the 256 eigenpairs and initial empirical coefficients.']])
+        ['[Alanine distribution figure](figures/fig_alanine.pdf)','256-mode BKT at s=8, seeds 1101-1103, empirical initial coefficients. The angle panels show seed 1101; the error panel includes all three paired designs.'],
+        ['[Alanine convergence figure](figures/fig_alanine_convergence.pdf)','The same BKT trajectories over 0 <= s <= 8, compared with LAWGD and KDE. BKT and LAWGD share the 256 eigenpairs and initial empirical coefficients.']])
     lines+=['## Fixed protocols']
     table(lines,['Experiment','Setup'],[
         ['1D OU','N(1.5,0.5^2) to N(0,1); Hermite spectrum; RK4 h=0.05; initial-particle coefficients (S).'],
-        ['Matched OU paths','M=2000; r=10,20,40; T=6; h=0.05,0.025; seeds 1000-1009; P/I/S; all 180 runs.'],
         ['10D OU','Coupling 0 and 0.15; M=5000; 30 modes/coordinate; T=6; h=0.05; seeds 700-709.'],
         ['2D double wells','beta=0,0.25,0.5,1; M=2000; n=200000; r=64; RBF J=145; FD-201; T=8/lambda1; h=0.05.'],
         ['4/9 wells','M=2000; n=200000; r=64; RBF/Legendre/FD-201; h=0.02; ten seeds.'],
@@ -478,7 +477,7 @@ def write_report():
 if __name__=='__main__':
     import argparse
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--check',action='store_true',help='Verify saved clouds and reproduce all 180 matched OU runs; no writes.')
+    parser.add_argument('--check',action='store_true',help='Verify the stored endpoint metrics of the saved runs; no writes.')
     parser.add_argument('--tables',action='store_true',help='Export manuscript CSV tables from the retained results.')
     args=parser.parse_args()
     if args.check:verify_saved_results()

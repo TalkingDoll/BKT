@@ -14,9 +14,10 @@ supplementary scripts reproduce individual studies and their figures.
 | Path | Contents |
 |---|---|
 | [BKT_experiments.ipynb](BKT_experiments.ipynb) | Main experiment notebook |
+| [BKT_asymptotic_variances.ipynb](BKT_asymptotic_variances.ipynb) | Asymptotic variances of the central limit theorem in the Ornstein-Uhlenbeck setting, with the results embedded |
 | [supplementary/](supplementary/) | Runners, plotting scripts, diagnostics, and runnable configurations |
 | [configs/retained/](configs/retained/) | Small configuration snapshots extracted from the local experiment archives |
-| [outputs/figures/](outputs/figures/) | All 11 retained figure PDFs |
+| [outputs/figures/](outputs/figures/) | The retained figure PDFs |
 | [Experiment report](outputs/all_experiment_results_and_assessment.md) | Results, interpretation, and detailed reproduction commands |
 | [Per-realisation JSON](outputs/revision_results.json) | Group-B numerical records, all outcomes, corrected products, and alanine follow-up diagnostics |
 | [Data catalog](outputs/data/catalog.json) | Inventory, sizes, and SHA-256 hashes for local archived data |
@@ -33,6 +34,9 @@ python -m pip install -r requirements.txt
 
 Open `BKT_experiments.ipynb` with a Jupyter-compatible environment using the
 same Python environment. Run the notebook from this project directory.
+`BKT_asymptotic_variances.ipynb` is self-contained. It rebuilds its tables
+from the stored results in a few seconds and recomputes them with `RUN = True`
+in about one hour on two cores.
 Scripts locate the project root from their own location; saved project paths
 are relative to that root, so the folder can be moved or renamed.
 
