@@ -36,7 +36,7 @@ Open `BKT_experiments.ipynb` with a Jupyter-compatible environment using the
 same Python environment. Run the notebook from this project directory.
 `BKT_asymptotic_variances.ipynb` is self-contained. It rebuilds its tables
 from the stored results in a few seconds and recomputes them with `RUN = True`
-in about one hour on two cores.
+in about 40 minutes on two cores.
 Scripts locate the project root from their own location; saved project paths
 are relative to that root, so the folder can be moved or renamed.
 
