@@ -21,7 +21,7 @@ supplementary scripts reproduce individual studies and their figures.
 | [Experiment report](outputs/all_experiment_results_and_assessment.md) | Results, interpretation, and detailed reproduction commands |
 | [Per-realisation JSON](outputs/revision_results.json) | Group-B numerical records, all outcomes, corrected products, and alanine follow-up diagnostics |
 | [Data catalog](outputs/data/catalog.json) | Inventory, sizes, and SHA-256 hashes for local archived data |
-| [rebuttal/](rebuttal/) | Experiments added during the ICLR 2027 discussion (notebook with embedded results, figures, rerun check) |
+| [rebuttal/](rebuttal/) | Experiments added during the ICLR 2027 discussion (notebook with embedded results, figures) |
 
 ## Environment
 

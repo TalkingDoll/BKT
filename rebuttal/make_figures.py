@@ -1,7 +1,7 @@
 """Figures of the experiments added in the revision, in the style of the figures of the submission.
 
-Reads the result files in results/ and writes figures/fig_lawgd_double_wells.pdf (Figure 8),
-figures/fig_barrier_scan.pdf (Figure 9) and figures/fig_coupled3d.pdf (three-dimensional example).
+Reads the result files in results/ and writes figures/fig_lawgd_double_wells.pdf (Figure 8) and
+figures/fig_barrier_scan.pdf (Figure 9).
 Independent panels carry their quantity as a title. A shared quantity of a row is written once on the left.
 Legends are placed below the panels."""
 import json, os
@@ -10,7 +10,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RES = os.path.join(HERE, 'results'); FIG = os.path.join(HERE, 'figures'); os.makedirs(FIG, exist_ok=True)
@@ -90,28 +89,11 @@ def fig_barrier():
     fig.tight_layout(rect=(0, 0.19, 1, 1)); fig.savefig(os.path.join(FIG, 'fig_barrier_scan.pdf')); plt.close(fig)
 
 
-def fig_coupled3d():
-    a, b = load('e6v2_results.json'), load('e6b_results.json'); A6, B6 = a['rows'], b['rows']; rs = [8, 16, 32, 64]
-    fig, ax = plt.subplots(1, 2, figsize=(6.2, 2.5))
-    series = (('fd', A6, 'fd', 'BKT, FD-41', C['fd'], '^'), ('k513', A6, 'koopman', 'BKT, $J=513$', C['bkt'], 'o'), ('k1729', B6, 'koopman', 'BKT, $J=1729$', '#56b4e9', 'o'),
-              ('l513', A6, 'lawgd', 'LAWGD, $J=513$', C['lawgd'], 's'), ('l1729', B6, 'lawgd', 'LAWGD, $J=1729$', '#f0a070', 's'))
-    for key, R, src, label, col, mk in series:
-        for j, q in enumerate(('w2', 'tv')):
-            v = np.array([[x[src][str(r)][q] for r in rs] for x in R])
-            ax[j].errorbar(rs, v.mean(0), v.std(0, ddof=1), color=col, marker=mk)
-    ref_band(ax[0], a['reference']['mean'], a['reference']['sd'])
-    ax[0].set_title(r'Sliced $W_2$ to the target sample'); ax[1].set_title('TV of the masses of the eight wells')
-    for a_ in ax: a_.set_xscale('log', base=2); a_.set_xticks(rs); a_.set_xticklabels([str(r) for r in rs]); a_.set_xlabel(r'Retained modes $r$')
-    fig.suptitle(r'Coupled three-dimensional double well, $\beta=0.5$')
-    legend_below(fig, [Line2D([], [], color=col, marker=mk, label=label) for _, _, _, label, col, mk in series] + [Line2D([], [], color=C['ref'], ls=':', label='Target reference')], 3)
-    fig.tight_layout(rect=(0, 0.2, 1, 1)); fig.savefig(os.path.join(FIG, 'fig_coupled3d.pdf')); plt.close(fig)
-
-
 def main(png=False):
-    """Write the three PDFs (and PNG copies if png=True, for display in the notebook) and return their paths."""
-    with plt.rc_context(STYLE):
-        fig_lawgd(); fig_barrier(); fig_coupled3d()
-    out = [os.path.join(FIG, f) for f in ('fig_lawgd_double_wells.pdf', 'fig_barrier_scan.pdf', 'fig_coupled3d.pdf')]
+    """Write the two PDFs (and PNG copies if png=True, for display in the notebook) and return their paths."""
+    with plt.style.context('default'), plt.rc_context(STYLE):       # independent of the settings of the calling session
+        fig_lawgd(); fig_barrier()
+    out = [os.path.join(FIG, f) for f in ('fig_lawgd_double_wells.pdf', 'fig_barrier_scan.pdf')]
     if png:
         import subprocess
         for f in out:
